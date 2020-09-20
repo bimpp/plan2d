@@ -51,11 +51,11 @@ namespace bimpp
             }
         };
 
-        template<typename T = double>
+        template<typename T>
         const typename constant<T>::point_type  constant<T>::zero_point(0, 0);
-        template<typename T = double>
+        template<typename T>
         const typename constant<T>::point_type  constant<T>::unit_point(1, 1);
-        template<typename T = double>
+        template<typename T>
         const size_t                            constant<T>::none_id(-1);
 
         template<typename T = double>
