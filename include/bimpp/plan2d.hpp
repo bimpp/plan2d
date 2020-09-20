@@ -93,8 +93,8 @@ namespace bimpp
         public:
             inline bool isValid() const
             {
-                return (typename constant<T>::isValid(start_node_id)
-                    && typename constant<T>::isValid(end_node_id)
+                return (constant<T>::isValid(start_node_id)
+                    && constant<T>::isValid(end_node_id)
                     && start_node_id != end_node_id
                     && thickness >= 0);
             }
@@ -123,7 +123,7 @@ namespace bimpp
         public:
             inline bool isValid() const
             {
-                return (typename constant<T>::isValid(wall_id)
+                return (constant<T>::isValid(wall_id)
                     && distance != 0
                     && width != 0);
             }
