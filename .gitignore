@@ -1,0 +1,11 @@
+# .vs
+/**/.vs
+/**/.vscode
+/**/debug.log
+
+# vim
+/**/*.*~
+
+# project
+/build
+/output
