@@ -91,6 +91,15 @@ namespace bimpp
             {}
 
         public:
+            inline bool isValid() const
+            {
+                return (typename constant<T>::isValid(start_node_id)
+                    && typename constant<T>::isValid(end_node_id)
+                    && start_node_id != end_node_id
+                    && thickness >= 0);
+            }
+
+        public:
             std::string kind;
             size_t start_node_id;
             size_t end_node_id;
@@ -110,6 +119,14 @@ namespace bimpp
                 , distance(_distance)
                 , width(_width)
             {}
+
+        public:
+            inline bool isValid() const
+            {
+                return (typename constant<T>::isValid(wall_id)
+                    && distance != 0
+                    && width != 0);
+            }
 
         public:
             std::string kind;
@@ -148,7 +165,22 @@ namespace bimpp
 
         public:
             house()
+                : name("")
+                , nodes()
+                , walls()
+                , holes()
+                , rooms()
             {}
+
+        public:
+            inline void reset()
+            {
+                name = "";
+                nodes.clear();
+                walls.clear();
+                holes.clear();
+                rooms.clear();
+            }
 
         public:
             std::string name;
