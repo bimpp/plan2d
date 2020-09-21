@@ -154,14 +154,18 @@ namespace bimpp
         class house
         {
         public:
-            typedef node<T>                     node_type;
-            typedef std::map<size_t, node_type> node_map;
-            typedef wall<T>                     wall_type;
-            typedef std::map<size_t, wall_type> wall_map;
-            typedef hole<T>                     hole_type;
-            typedef std::map<size_t, hole_type> hole_map;
-            typedef room<T>                     room_type;
-            typedef std::map<size_t, room_type> room_map;
+            typedef node<T>                         node_type;
+            typedef std::map<size_t, node_type>     node_map;
+            typedef std::pair<size_t, node_type>    node_pair;
+            typedef wall<T>                         wall_type;
+            typedef std::map<size_t, wall_type>     wall_map;
+            typedef std::pair<size_t, wall_type>    wall_pair;
+            typedef hole<T>                         hole_type;
+            typedef std::map<size_t, hole_type>     hole_map;
+            typedef std::pair<size_t, hole_type>    hole_pair;
+            typedef room<T>                         room_type;
+            typedef std::map<size_t, room_type>     room_map;
+            typedef std::pair<size_t, room_type>    room_pair;
 
         public:
             house()
@@ -245,9 +249,9 @@ namespace bimpp
                 {}
 
             public:
-                bool operator==(const wall_ex& _o)
+                bool operator==(const wall_ex& _a) const
                 {
-                    return (id == _o.id && inversed == _o.inversed);
+                    return (id == _a.id && inversed == _a.inversed);
                 }
 
             public:
@@ -281,6 +285,14 @@ namespace bimpp
                 {}
 
             public:
+                bool operator==(const node_ex& _a) const
+                {
+                    return (id == _a.id
+                        && used == _a.used
+                        && with_wall == _a.with_wall);
+                }
+
+            public:
                 size_t id;
                 bool used;
                 wall_ex with_wall;
@@ -290,6 +302,14 @@ namespace bimpp
             typedef std::vector<path>               path_vector;
 
         public:
+            template<typename TItem>
+            static void addUnique(std::vector<TItem>& _v, const TItem& _i)
+            {
+                std::vector<TItem>::iterator it_found = std::find(_v.begin(), _v.end(), _i);
+                if (it_found != _v.end()) return;
+                _v.push_back(_i);
+            }
+
             static T calculateSinAngleEx(const node<T>& _o, const node<T>& _a, const node<T>& _b)
             {
                 node<T> line_a(_a.point.x() - _o.point.x(), _a.point.y() - _o.point.y());
@@ -328,51 +348,87 @@ namespace bimpp
             }
 
             static bool calculatePaths(const house_type& _house
-                , size_t _room_id
-                , path_vector& _paths)
+                , path_vector& _paths
+                , size_t _room_id = constant<T>::none_id)
             {
-                const typename std::map<size_t, room<T>>::const_iterator cit_found_room = _house.rooms.find(_room_id);
-                if (cit_found_room == _house.rooms.cend())
+                std::vector<size_t> bim_room_ids;
+                if (_room_id != constant<T>::none_id)
                 {
-                    return false;
+                    const typename house<T>::room_map::const_iterator cit_found_room = _house.rooms.find(_room_id);
+                    if (cit_found_room == _house.rooms.cend())
+                    {
+                        return false;
+                    }
                 }
-                std::map<size_t, std::vector<node_ex>> bim_node_2_next_nodes;
-
-                const room<T>& bim_area = cit_found_room->second;
-                for (const size_t wall_id : bim_area.wall_ids)
+                else
                 {
-                    const wall<T>& bim_wall = _house.walls.find(wall_id)->second;
-                    node_ex bim_next_node;
-                    bim_next_node.with_wall.id = wall_id;
-                    bim_next_node.with_wall.inversed = false;
-                    bim_next_node.id = bim_wall.end_node_id;
-                    bim_node_2_next_nodes[bim_wall.start_node_id].push_back(bim_next_node);
-                    bim_next_node.with_wall.inversed = true;
-                    bim_next_node.id = bim_wall.start_node_id;
-                    bim_node_2_next_nodes[bim_wall.end_node_id].push_back(bim_next_node);
+                    for (house<T>::room_map::const_iterator cit = _house.rooms.cbegin(); cit != _house.rooms.cend(); ++cit)
+                    {
+                        bim_room_ids.push_back(cit->first);
+                    }
                 }
 
-                if (bim_node_2_next_nodes.empty())
+                std::map<size_t, std::vector<node_ex>> bim_nodes_2_next_nodes;
+
+                for (size_t bim_room_id : bim_room_ids)
+                {
+                    const room<T>& bim_room = _house.rooms.find(bim_room_id)->second;
+                    for (const size_t wall_id : bim_room.wall_ids)
+                    {
+                        const wall<T>& bim_wall = _house.walls.find(wall_id)->second;
+                        node_ex bim_next_node;
+                        bim_next_node.with_wall.id = wall_id;
+                        {
+                            bim_next_node.with_wall.inversed = false;
+                            bim_next_node.id = bim_wall.end_node_id;
+                            if (bim_nodes_2_next_nodes.find(bim_wall.start_node_id) == bim_nodes_2_next_nodes.end())
+                            {
+                                std::vector<node_ex> bim_next_nodes;
+                                bim_next_nodes.push_back(bim_next_node);
+                                bim_nodes_2_next_nodes.insert(std::make_pair<>(bim_wall.start_node_id, bim_next_nodes));
+                            }
+                            else
+                            {
+                                addUnique<>(bim_nodes_2_next_nodes[bim_wall.start_node_id], bim_next_node);
+                            }
+                        }
+                        {
+                            bim_next_node.with_wall.inversed = true;
+                            bim_next_node.id = bim_wall.start_node_id;
+                            if (bim_nodes_2_next_nodes.find(bim_wall.end_node_id) == bim_nodes_2_next_nodes.end())
+                            {
+                                std::vector<node_ex> bim_next_nodes;
+                                bim_next_nodes.push_back(bim_next_node);
+                                bim_nodes_2_next_nodes.insert(std::make_pair<>(bim_wall.end_node_id, bim_next_nodes));
+                            }
+                            else
+                            {
+                                addUnique<>(bim_nodes_2_next_nodes[bim_wall.end_node_id], bim_next_node);
+                            }
+                        }
+                    }
+                }
+
+                if (bim_nodes_2_next_nodes.empty())
                 {
                     return false;
                 }
 
                 /// compute the closed path
-                while (!bim_node_2_next_nodes.empty())
+                while (!bim_nodes_2_next_nodes.empty())
                 {
                     path bim_closed_path;
                     bim_closed_path.room_id = _room_id;
                     bool bim_path_is_closed = false;
 
-                    size_t bim_start_node_id = bim_node_2_next_nodes.cbegin()->first;
+                    size_t bim_start_node_id = bim_nodes_2_next_nodes.cbegin()->first;
                     size_t bim_last_node_id = constant<T>::none_id;
                     size_t bim_first_wall_start_node_id = constant<T>::none_id;
                     size_t bim_first_wall_end_node_id = constant<T>::none_id;
                     wall_ex bim_first_wall_ex;
                     while (true)
                     {
-                        const node<T>& bim_start_node = _house.nodes.find(bim_start_node_id)->second;
-                        std::vector<node_ex>& bim_next_nodes = bim_node_2_next_nodes.find(bim_start_node_id)->second;
+                        std::vector<node_ex>& bim_next_nodes = bim_nodes_2_next_nodes.find(bim_start_node_id)->second;
                         if (bim_next_nodes.empty())
                         {
                             break;
@@ -386,6 +442,7 @@ namespace bimpp
                         }
                         else
                         {
+                            const node<T>& bim_start_node = _house.nodes.find(bim_start_node_id)->second;
                             const node<T>& bim_last_node = _house.nodes.find(bim_last_node_id)->second;
                             std::map<T, size_t> sin_angle_ex_2_index;
                             for (size_t i = 0; i < bim_next_nodes.size(); ++i)
@@ -401,8 +458,7 @@ namespace bimpp
                                 break;
                             }
 
-                            typename std::map<T, size_t>::const_iterator sin_angle_ex_2_index_last = sin_angle_ex_2_index.cend();
-                            --sin_angle_ex_2_index_last;
+                            typename std::map<T, size_t>::const_iterator sin_angle_ex_2_index_last = --sin_angle_ex_2_index.cend();
                             node_ex& bim_next_node = bim_next_nodes[sin_angle_ex_2_index_last->second];
                             bim_next_node.used = true;
 
@@ -431,7 +487,7 @@ namespace bimpp
                         _paths.push_back(bim_closed_path);
                     }
 
-                    for (typename std::map<size_t, std::vector<node_ex>>::iterator it_m = bim_node_2_next_nodes.begin(); it_m != bim_node_2_next_nodes.end();)
+                    for (typename std::map<size_t, std::vector<node_ex>>::iterator it_m = bim_nodes_2_next_nodes.begin(); it_m != bim_nodes_2_next_nodes.end();)
                     {
                         std::vector<node_ex>& bim_next_nodes = it_m->second;
                         for (typename std::vector<node_ex>::iterator it_v = bim_next_nodes.begin(); it_v != bim_next_nodes.end();)
@@ -448,7 +504,7 @@ namespace bimpp
 
                         if (it_m->second.empty())
                         {
-                            it_m = bim_node_2_next_nodes.erase(it_m);
+                            it_m = bim_nodes_2_next_nodes.erase(it_m);
                         }
                         else
                         {
