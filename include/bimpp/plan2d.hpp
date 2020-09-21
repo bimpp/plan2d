@@ -305,7 +305,7 @@ namespace bimpp
             template<typename TItem>
             static void addUnique(std::vector<TItem>& _v, const TItem& _i)
             {
-                std::vector<TItem>::iterator it_found = std::find(_v.begin(), _v.end(), _i);
+                typename std::vector<TItem>::iterator it_found = std::find(_v.begin(), _v.end(), _i);
                 if (it_found != _v.end()) return;
                 _v.push_back(_i);
             }
@@ -362,7 +362,7 @@ namespace bimpp
                 }
                 else
                 {
-                    for (house<T>::room_map::const_iterator cit = _house.rooms.cbegin(); cit != _house.rooms.cend(); ++cit)
+                    for (typename house<T>::room_map::const_iterator cit = _house.rooms.cbegin(); cit != _house.rooms.cend(); ++cit)
                     {
                         bim_room_ids.push_back(cit->first);
                     }
