@@ -70,6 +70,11 @@ namespace bimpp
         template<typename T>
         const size_t                            constant<T>::none_id(-1);
 
+        /*!
+         * A node represents a point or a joint with two walls in the 2D plan
+         * 
+         * brief: A point or a joint in the plan
+         */
         template<typename T = double>
         class node
         {
@@ -77,15 +82,50 @@ namespace bimpp
             typedef typename constant<T>::point_type    point_type;
 
         public:
+            /*!
+             * A constructor by a 2D coordinate
+             * param: _x, the value in x-axis, default is 0
+             * param: _y, the value in y-axis, default is 0
+             */
             node(T _x = 0, T _y = 0)
                 : point(_x, _y)
             {}
 
+            /*!
+             * A constructor by a 2D point
+             * param: _point, a 2D point, default is origin point
+             */
             node(const point_type& _point = constant<T>::zero_point)
                 : point(_point)
             {}
 
         public:
+            inline T x() const
+            {
+                return x();
+            }
+
+            inline node& x(T _x)
+            {
+                x(_x);
+                return *this;
+            }
+
+            inline T y() const
+            {
+                return y();
+            }
+
+            inline node& y(T _x)
+            {
+                y(_x);
+                return *this;
+            }
+
+        private:
+            /*!
+             * The point or position of the node
+             */
             point_type point;
         };
 
@@ -112,7 +152,7 @@ namespace bimpp
             }
 
         public:
-            /// What kind of wall
+            /// The kind of wall
             std::string     kind;
             /// The start of wall
             size_t          start_node_id;
@@ -328,22 +368,22 @@ namespace bimpp
 
             static T calculateSinAngleEx(const node<T>& _o, const node<T>& _a, const node<T>& _b)
             {
-                node<T> line_a(_a.point.x() - _o.point.x(), _a.point.y() - _o.point.y());
-                T len_a = sqrt(line_a.point.x() * line_a.point.x() + line_a.point.y() * line_a.point.y());
+                node<T> line_a(_a.x() - _o.x(), _a.y() - _o.y());
+                T len_a = sqrt(line_a.x() * line_a.x() + line_a.y() * line_a.y());
                 if (len_a != 0)
                 {
-                    line_a.point.x(line_a.point.x() / len_a);
-                    line_a.point.y(line_a.point.y() / len_a);
+                    line_a.x(line_a.x() / len_a);
+                    line_a.y(line_a.y() / len_a);
                 }
-                node<T> line_b(_b.point.x() - _o.point.x(), _b.point.y() - _o.point.y());
-                T len_b = sqrt(line_b.point.x() * line_b.point.x() + line_b.point.y() * line_b.point.y());
+                node<T> line_b(_b.x() - _o.x(), _b.y() - _o.y());
+                T len_b = sqrt(line_b.x() * line_b.x() + line_b.y() * line_b.y());
                 if (len_b != 0)
                 {
-                    line_b.point.x(line_b.point.x() / len_b);
-                    line_b.point.y(line_b.point.y() / len_b);
+                    line_b.x(line_b.x() / len_b);
+                    line_b.y(line_b.y() / len_b);
                 }
-                T sin_res = line_a.point.x() * line_b.point.y() - line_a.point.y() * line_b.point.x();
-                T cos_res = line_a.point.x() * line_b.point.x() + line_a.point.y() * line_b.point.y();
+                T sin_res = line_a.x() * line_b.y() - line_a.y() * line_b.x();
+                T cos_res = line_a.x() * line_b.x() + line_a.y() * line_b.y();
                 T res = sin_res;
                 if (cos_res < static_cast<T>(0))
                 {
