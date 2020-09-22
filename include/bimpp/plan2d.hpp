@@ -32,30 +32,30 @@
 namespace bimpp
 {
     /*!
-     * all about the plan in 2D
+     * All about the plan in 2D
      */
     namespace plan2d
     {
         /*!
-         * define some classes and declare some constant values
+         * Define some classes and declare some constant values
          */
         template<typename T = double>
         class constant
         {
         public:
-            /// define the point type
+            /// Define the point type
             typedef typename boost::polygon::point_data<T>      point_type;
-            /// define the polygon type
+            /// Define the polygon type
             typedef typename boost::polygon::polygon_data<T>    polygon_type;
 
         public:
-            static const point_type zero_point;     ///< origin point
-            static const point_type unit_point;     ///< unit point
-            static const size_t     none_id;        ///< invalid id
+            static const point_type zero_point;     ///< Origin point
+            static const point_type unit_point;     ///< Unit point
+            static const size_t     none_id;        ///< Invalid id
 
         public:
             /*!
-             * is id valid?
+             * Is id valid?
              */
             static bool isValid(size_t _id)
             {
@@ -112,13 +112,13 @@ namespace bimpp
             }
 
         public:
-            /// what kind of wall
+            /// What kind of wall
             std::string     kind;
-            /// the start of wall
+            /// The start of wall
             size_t          start_node_id;
-            /// the end of wall
+            /// The end of wall
             size_t          end_node_id;
-            /// the thickness of wall
+            /// The thickness of wall
             T               thickness;
         };
 

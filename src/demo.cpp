@@ -1,7 +1,15 @@
 #include <bimpp/plan2d.hpp>
 
+#if defined(WIN32) && !defined(NDEBUG)
+#include <crtdbg.h>
+#endif
+
 int main(int argc, char* argv[])
 {
+#if defined(WIN32) && !defined(NDEBUG)
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
     bimpp::plan2d::house<double> bimpp_house;
 
     for (size_t y = 0; y < 5; ++y)
