@@ -24,27 +24,39 @@
 
 #include <string>
 #include <vector>
-#include <stdint.h>
+#include <cstdint>
+#include <cassert>
 
 #include <boost/polygon/polygon.hpp>
 
 namespace bimpp
 {
+    /*!
+     * all about the plan in 2D
+     */
     namespace plan2d
     {
+        /*!
+         * define some classes and declare some constant values
+         */
         template<typename T = double>
         class constant
         {
         public:
+            /// define the point type
             typedef typename boost::polygon::point_data<T>      point_type;
+            /// define the polygon type
             typedef typename boost::polygon::polygon_data<T>    polygon_type;
 
         public:
-            static const point_type zero_point;
-            static const point_type unit_point;
-            static const size_t     none_id;
+            static const point_type zero_point;     ///< origin point
+            static const point_type unit_point;     ///< unit point
+            static const size_t     none_id;        ///< invalid id
 
         public:
+            /*!
+             * is id valid?
+             */
             static bool isValid(size_t _id)
             {
                 return (_id != none_id);
@@ -100,10 +112,14 @@ namespace bimpp
             }
 
         public:
-            std::string kind;
-            size_t start_node_id;
-            size_t end_node_id;
-            T thickness;
+            /// what kind of wall
+            std::string     kind;
+            /// the start of wall
+            size_t          start_node_id;
+            /// the end of wall
+            size_t          end_node_id;
+            /// the thickness of wall
+            T               thickness;
         };
 
         template<typename T = double>
@@ -414,7 +430,7 @@ namespace bimpp
                     return false;
                 }
 
-                /// compute the closed path
+                /// compute the path/edges of the room
                 while (!bim_nodes_2_next_nodes.empty())
                 {
                     path bim_closed_path;
@@ -442,16 +458,25 @@ namespace bimpp
                         }
                         else
                         {
-                            const node<T>& bim_start_node = _house.nodes.find(bim_start_node_id)->second;
-                            const node<T>& bim_last_node = _house.nodes.find(bim_last_node_id)->second;
-                            std::map<T, size_t> sin_angle_ex_2_index;
-                            for (size_t i = 0; i < bim_next_nodes.size(); ++i)
+                            assert(bim_start_node_id != bim_last_node_id);
+                            if (bim_start_node_id == bim_last_node_id)
                             {
-                                const node_ex& bim_next_node = bim_next_nodes[i];
-                                if (bim_next_node.used) continue;
-                                const node<T>& bim_node = _house.nodes.find(bim_next_node.id)->second;
-                                T sin_angle_ex = calculateSinAngleEx(bim_start_node, bim_last_node, bim_node);
-                                sin_angle_ex_2_index.insert(std::make_pair<>(sin_angle_ex, i));
+                                throw std::exception("containts invalid wall!");
+                            }
+
+                            std::map<T, size_t> sin_angle_ex_2_index;
+                            {
+                                /// sort the next node by the `sin-angle-ex`
+                                const node<T>& bim_start_node = _house.nodes.find(bim_start_node_id)->second;
+                                const node<T>& bim_last_node = _house.nodes.find(bim_last_node_id)->second;
+                                for (size_t i = 0; i < bim_next_nodes.size(); ++i)
+                                {
+                                    const node_ex& bim_next_node = bim_next_nodes[i];
+                                    if (bim_next_node.used) continue;
+                                    const node<T>& bim_node = _house.nodes.find(bim_next_node.id)->second;
+                                    T sin_angle_ex = calculateSinAngleEx(bim_start_node, bim_last_node, bim_node);
+                                    sin_angle_ex_2_index.insert(std::make_pair<>(sin_angle_ex, i));
+                                }
                             }
                             if (sin_angle_ex_2_index.empty())
                             {
@@ -474,11 +499,6 @@ namespace bimpp
 
                             bim_last_node_id = bim_start_node_id;
                             bim_start_node_id = bim_next_node.id;
-
-                            if (bim_start_node_id == bim_last_node_id)
-                            {
-                                break;
-                            }
                         }
                     }
 
