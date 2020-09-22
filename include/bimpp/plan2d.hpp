@@ -502,7 +502,7 @@ namespace bimpp
                             assert(bim_start_node_id != bim_last_node_id);
                             if (bim_start_node_id == bim_last_node_id)
                             {
-                                throw std::exception("containts invalid wall!");
+                                throw std::invalid_argument("contains invalid wall!");
                             }
 
                             std::map<T, size_t> sin_angle_ex_2_index;
