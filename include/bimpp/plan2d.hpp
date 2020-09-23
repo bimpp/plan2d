@@ -35,6 +35,7 @@
 #include <vector>
 #include <array>
 #include <map>
+#include <algorithm>
 
 namespace bimpp
 {
