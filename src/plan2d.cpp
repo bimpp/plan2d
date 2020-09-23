@@ -1,3 +1,25 @@
+/*
+ * The MIT License (MIT)
+ * Copyright © 2020 BIM++
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the “Software”),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
 #include <bimpp/plan2d.hpp>
 
 #if defined(WIN32) && !defined(NDEBUG)
@@ -10,6 +32,7 @@ int main(int argc, char* argv[])
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
+    /// Make a house
     bimpp::plan2d::house<double> bimpp_house;
 
     for (size_t y = 0; y < 5; ++y)
@@ -35,6 +58,7 @@ int main(int argc, char* argv[])
         }
     }
 
+    /// Make a room that has some complex edges
     bimpp::plan2d::room<> bimpp_room;
     bimpp_room.wall_ids = {
         1012, 1034, 1101, 1112, 1123, 1201, 1234, 1312, 1323, 1423, 1434,
@@ -42,7 +66,7 @@ int main(int argc, char* argv[])
     };
     bimpp_house.rooms.insert(std::make_pair<>(0, bimpp_room));
 
-    bimpp::plan2d::algorithm<>::path_vector bimpp_paths;
-    bimpp::plan2d::algorithm<>::calculatePaths(bimpp_house, bimpp_paths);
+    bimpp::plan2d::algorithm<>::room_ex_vector bimpp_room_exs;
+    bimpp::plan2d::algorithm<>::calculateRoomExs(bimpp_house, bimpp_room_exs);
     return 0;
 }

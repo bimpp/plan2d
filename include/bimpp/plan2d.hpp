@@ -20,6 +20,11 @@
  * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
+/*!
+ * @file plan2d.hpp
+ * 
+ * All about the plan in 2D, and are inspired by [IFC](https://technical.buildingsmart.org/standards/ifc/)
+ */
 #pragma once
 
 #include <cstdint>
@@ -32,9 +37,6 @@
 
 namespace bimpp
 {
-    /*!
-     * All about the plan in 2D
-     */
     namespace plan2d
     {
         /*!
@@ -74,7 +76,7 @@ namespace bimpp
         /*!
          * A node represents a point or a joint with two walls in the 2D plan
          * 
-         * brief: A point or a joint in the plan
+         * @brief A point or a joint in the plan
          */
         template<typename T = double>
         class node
@@ -85,8 +87,9 @@ namespace bimpp
         public:
             /*!
              * A constructor by a 2D coordinate
-             * param: _x, the value in x-axis, default is 0
-             * param: _y, the value in y-axis, default is 0
+             * 
+             * @param _x The value in x-axis, default is 0.
+             * @param _y The value in y-axis, default is 0.
              */
             node(T _x = 0, T _y = 0)
                 : point(_x, _y)
@@ -94,7 +97,8 @@ namespace bimpp
 
             /*!
              * A constructor by a 2D point
-             * param: _point, a 2D point, default is origin point
+             * 
+             * @param _point A 2D point, default is origin point.
              */
             node(const point_type& _point = constant<T>::zero_point)
                 : point(_point)
@@ -130,6 +134,9 @@ namespace bimpp
             point_type point;
         };
 
+        /*!
+         * A wall represents a wall in the 2D plan
+         */
         template<typename T = double>
         class wall
         {
@@ -163,6 +170,10 @@ namespace bimpp
             T               thickness;
         };
 
+        /*!
+         * A hole represents a hole in the 2D plan,
+         * it might be a window or a door or a hole in a wall.
+         */
         template<typename T = double>
         class hole
         {
@@ -316,10 +327,10 @@ namespace bimpp
                 bool inversed;
             };
 
-            class path
+            class room_ex
             {
             public:
-                path()
+                room_ex()
                     : room_id(constant<T>::none_id)
                     , walls()
                     , inside(false)
@@ -356,7 +367,7 @@ namespace bimpp
             };
 
         public:
-            typedef std::vector<path>               path_vector;
+            typedef std::vector<room_ex>               room_ex_vector;
 
         public:
             template<typename TItem>
@@ -404,8 +415,8 @@ namespace bimpp
                 return res;
             }
 
-            static bool calculatePaths(const house_type& _house
-                , path_vector& _paths
+            static bool calculateRoomExs(const house_type& _house
+                , room_ex_vector& _room_exs
                 , size_t _room_id = constant<T>::none_id)
             {
                 std::vector<size_t> bim_room_ids;
@@ -474,8 +485,8 @@ namespace bimpp
                 /// compute the path/edges of the room
                 while (!bim_nodes_2_next_nodes.empty())
                 {
-                    path bim_closed_path;
-                    bim_closed_path.room_id = _room_id;
+                    room_ex bim_closed_room_ex;
+                    bim_closed_room_ex.room_id = _room_id;
                     bool bim_path_is_closed = false;
 
                     size_t bim_start_node_id = bim_nodes_2_next_nodes.cbegin()->first;
@@ -530,7 +541,7 @@ namespace bimpp
 
                             wall_ex bim_wall_ex;
                             bim_wall_ex = bim_next_node.with_wall;
-                            bim_closed_path.walls.push_back(bim_wall_ex);
+                            bim_closed_room_ex.walls.push_back(bim_wall_ex);
 
                             if (bim_first_wall_ex == bim_next_node.with_wall)
                             {
@@ -545,7 +556,7 @@ namespace bimpp
 
                     if (bim_path_is_closed)
                     {
-                        _paths.push_back(bim_closed_path);
+                        _room_exs.push_back(bim_closed_room_ex);
                     }
 
                     for (typename std::map<size_t, std::vector<node_ex>>::iterator it_m = bim_nodes_2_next_nodes.begin(); it_m != bim_nodes_2_next_nodes.end();)
@@ -574,13 +585,13 @@ namespace bimpp
                     }
                 }
 
-                /// decide wheather the closed path is inside or outside
-                for (path& closed_path : _paths)
+                //TODO: decide wheather the closed path is inside or outside
+                for (room_ex& closed_room_ex : _room_exs)
                 {
                     //
                 }
 
-                return !_paths.empty();
+                return !_room_exs.empty();
             }
         };
     }
