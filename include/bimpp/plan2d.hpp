@@ -42,6 +42,9 @@ namespace bimpp
 {
     namespace plan2d
     {
+        /*!
+         * Define a point for the 2D plan, it has two dimensions.
+         */
         template<typename T = double>
         class point
         {
@@ -172,6 +175,11 @@ namespace bimpp
             {}
 
         public:
+            inline const point_type& p() const
+            {
+                return point;
+            }
+
             inline precision_type x() const
             {
                 return point.x();
@@ -209,10 +217,11 @@ namespace bimpp
         {
         public:
             typedef typename TConstant::precision_type  precision_type;
+            typedef typename TConstant::id_type         id_type;
 
         public:
-            wall(size_t _start_node_id = TConstant::none_id
-                , size_t _end_node_id = TConstant::none_id
+            wall(id_type _start_node_id = TConstant::none_id
+                , id_type _end_node_id = TConstant::none_id
                 , precision_type _thickness = 0)
                 : kind("")
                 , start_node_id(_start_node_id)
@@ -233,9 +242,9 @@ namespace bimpp
             /// The kind of wall
             std::string     kind;
             /// The start of wall
-            size_t          start_node_id;
+            id_type         start_node_id;
             /// The end of wall
-            size_t          end_node_id;
+            id_type         end_node_id;
             /// The thickness of wall
             precision_type  thickness;
         };
@@ -249,9 +258,10 @@ namespace bimpp
         {
         public:
             typedef typename TConstant::precision_type  precision_type;
+            typedef typename TConstant::id_type         id_type;
 
         public:
-            hole(size_t _wall_id = TConstant::none_id
+            hole(id_type _wall_id = TConstant::none_id
                 , precision_type _distance = 0
                 , precision_type _width = 0)
                 : kind("")
@@ -272,7 +282,7 @@ namespace bimpp
         public:
             std::string     kind;
             std::string     direction;
-            size_t          wall_id;
+            id_type         wall_id;
             precision_type  distance;
             precision_type  width;
         };
@@ -281,14 +291,18 @@ namespace bimpp
         class room
         {
         public:
+            typedef typename TConstant::id_type         id_type;
+            typedef std::vector<id_type>                id_vector;
+
+        public:
             room()
                 : kind("")
                 , wall_ids()
             {}
 
         public:
-            std::string kind;
-            std::vector<size_t> wall_ids;
+            std::string     kind;
+            id_vector       wall_ids;
         };
 
         template<typename TConstant = constant<>>
@@ -339,10 +353,11 @@ namespace bimpp
         class building
         {
         public:
-            typedef house<TConstant>                house_type;
-            typedef std::map<size_t, house_type>    house_map;
-            typedef typename TConstant::point_type  position_type;
-            typedef std::map<position_type, size_t> potision_map;
+            typedef typename TConstant::id_type         id_type;
+            typedef house<TConstant>                    house_type;
+            typedef std::map<id_type, house_type>       house_map;
+            typedef typename TConstant::point_type      position_type;
+            typedef std::map<position_type, id_type>    potision_map;
 
         public:
             house_map houses;
@@ -353,8 +368,9 @@ namespace bimpp
         class site
         {
         public:
-            typedef building<TConstant>             building_type;
-            typedef std::map<size_t, building_type> building_map;
+            typedef typename TConstant::id_type         id_type;
+            typedef building<TConstant>                 building_type;
+            typedef std::map<id_type, building_type>    building_map;
 
         public:
             std::string name;
@@ -365,8 +381,9 @@ namespace bimpp
         class project
         {
         public:
-            typedef site<TConstant>                 site_type;
-            typedef std::map<size_t, site_type>     site_map;
+            typedef typename TConstant::id_type         id_type;
+            typedef site<TConstant>                     site_type;
+            typedef std::map<id_type, site_type>        site_map;
 
         public:
             std::string name;
@@ -378,16 +395,21 @@ namespace bimpp
         {
         public:
             typedef typename TConstant::precision_type  precision_type;
+            typedef typename TConstant::id_type         id_type;
+            typedef std::vector<id_type>                id_vector;
+            typedef node<TConstant>                     node_type;
+            typedef wall<TConstant>                     wall_type;
+            typedef room<TConstant>                     room_type;
             typedef house<TConstant>                    house_type;
-            typedef typename house_type::node_type      node_type;
 
         public:
             class wall_ex
             {
             public:
-                wall_ex(size_t _id = TConstant::none_id, bool _inversed = false)
+                wall_ex(id_type _id = TConstant::none_id, bool _inversed = false)
                     : id(_id)
                     , inversed(_inversed)
+                    , repeated(false)
                 {}
 
             public:
@@ -397,29 +419,37 @@ namespace bimpp
                 }
 
             public:
-                size_t id;
-                bool inversed;
+                id_type     id;
+                bool        inversed;
+                bool        repeated;
+            };
+
+            enum room_side
+            {
+                room_side_both,
+                room_side_in,
+                room_side_out,
             };
 
             class room_ex
             {
             public:
                 room_ex()
-                    : room_id(TConstant::none_id)
+                    : id(TConstant::none_id)
                     , walls()
-                    , inside(false)
+                    , side(room_side_both)
                 {}
 
             public:
-                size_t room_id;
-                std::vector<wall_ex> walls;
-                bool inside;
+                id_type                 id;
+                std::vector<wall_ex>    walls;
+                room_side               side;
             };
 
             class node_ex
             {
             public:
-                node_ex(size_t _id = TConstant::none_id
+                node_ex(id_type _id = TConstant::none_id
                     , bool _used = false)
                     : id(_id)
                     , used(_used)
@@ -435,9 +465,9 @@ namespace bimpp
                 }
 
             public:
-                size_t id;
-                bool used;
-                wall_ex with_wall;
+                id_type     id;
+                bool        used;
+                wall_ex     with_wall;
             };
 
         public:
@@ -452,16 +482,41 @@ namespace bimpp
                 _v.push_back(_i);
             }
 
-            static precision_type calculateSinAngleEx(const node<TConstant>& _o, const node<TConstant>& _a, const node<TConstant>& _b)
+            template<typename TItem>
+            static bool isContainsForBiggerVector(const std::vector<TItem>& _all, const std::vector<TItem>& _sub)
             {
-                node<TConstant> line_a(_a.x() - _o.x(), _a.y() - _o.y());
+                if (_all.empty() || _sub.empty()) return false;
+                if (_all.size() < _sub.size()) return false;
+                size_t a_index = 0;
+                size_t s_index = 0;
+                const size_t a_size = _all.size();
+                const size_t s_size = _sub.size();
+                while (a_index < a_size
+                    && s_index < s_size
+                    && _all[a_index] <= _sub[s_index])
+                {
+                    if (_all[a_index] == _sub[s_index])
+                    {
+                        ++s_index;
+                    }
+                    else
+                    {
+                        ++a_index;
+                    }
+                }
+                return (s_index == s_size);
+            }
+
+            static precision_type calculateSinAngleEx(const node_type& _o, const node_type& _a, const node_type& _b)
+            {
+                node_type line_a(_a.x() - _o.x(), _a.y() - _o.y());
                 precision_type len_a = sqrt(line_a.x() * line_a.x() + line_a.y() * line_a.y());
                 if (len_a != 0)
                 {
                     line_a.x(line_a.x() / len_a);
                     line_a.y(line_a.y() / len_a);
                 }
-                node<TConstant> line_b(_b.x() - _o.x(), _b.y() - _o.y());
+                node_type line_b(_b.x() - _o.x(), _b.y() - _o.y());
                 precision_type len_b = sqrt(line_b.x() * line_b.x() + line_b.y() * line_b.y());
                 if (len_b != 0)
                 {
@@ -491,33 +546,36 @@ namespace bimpp
 
             static bool computeRoomExs(const house_type& _house
                 , room_ex_vector& _room_exs
-                , size_t _room_id = TConstant::none_id)
+                , id_type _room_id = TConstant::none_id)
             {
-                std::vector<size_t> bim_room_ids;
+                id_vector bim_room_ids;
                 if (_room_id != TConstant::none_id)
                 {
-                    const typename house<TConstant>::room_map::const_iterator cit_found_room = _house.rooms.find(_room_id);
+                    const typename house_type::room_map::const_iterator cit_found_room = _house.rooms.find(_room_id);
                     if (cit_found_room == _house.rooms.cend())
                     {
                         return false;
                     }
+                    bim_room_ids.push_back(_room_id);
                 }
                 else
                 {
-                    for (typename house<TConstant>::room_map::const_iterator cit = _house.rooms.cbegin(); cit != _house.rooms.cend(); ++cit)
+                    for (typename house_type::room_map::const_iterator cit = _house.rooms.cbegin(); cit != _house.rooms.cend(); ++cit)
                     {
                         bim_room_ids.push_back(cit->first);
                     }
                 }
 
-                std::map<size_t, std::vector<node_ex>> bim_nodes_2_next_nodes;
+                _room_exs.clear();
 
-                for (size_t bim_room_id : bim_room_ids)
+                std::map<id_type, std::vector<node_ex>> bim_nodes_2_next_nodes;
+
+                for (id_type bim_room_id : bim_room_ids)
                 {
-                    const room<TConstant>& bim_room = _house.rooms.find(bim_room_id)->second;
-                    for (const size_t wall_id : bim_room.wall_ids)
+                    const room_type& bim_room = _house.rooms.find(bim_room_id)->second;
+                    for (const id_type wall_id : bim_room.wall_ids)
                     {
-                        const wall<TConstant>& bim_wall = _house.walls.find(wall_id)->second;
+                        const wall_type& bim_wall = _house.walls.find(wall_id)->second;
                         node_ex bim_next_node;
                         bim_next_node.with_wall.id = wall_id;
                         {
@@ -559,14 +617,14 @@ namespace bimpp
                 /// compute the path/edges of the room
                 while (!bim_nodes_2_next_nodes.empty())
                 {
-                    room_ex bim_closed_room_ex;
-                    bim_closed_room_ex.room_id  = _room_id;
+                    room_ex bim_room_ex;
+                    bim_room_ex.id  = _room_id;
                     bool bim_path_is_closed     = false;
 
-                    size_t bim_start_node_id            = bim_nodes_2_next_nodes.cbegin()->first;
-                    size_t bim_last_node_id             = TConstant::none_id;
-                    size_t bim_first_wall_start_node_id = TConstant::none_id;
-                    size_t bim_first_wall_end_node_id   = TConstant::none_id;
+                    id_type bim_start_node_id            = bim_nodes_2_next_nodes.cbegin()->first;
+                    id_type bim_last_node_id             = TConstant::none_id;
+                    id_type bim_first_wall_start_node_id = TConstant::none_id;
+                    id_type bim_first_wall_end_node_id   = TConstant::none_id;
                     wall_ex bim_first_wall_ex;
                     while (true)
                     {
@@ -593,13 +651,13 @@ namespace bimpp
                             std::map<precision_type, size_t> sin_angle_ex_2_index;
                             {
                                 /// sort the next node by the `sin-angle-ex`
-                                const node<TConstant>& bim_start_node = _house.nodes.find(bim_start_node_id)->second;
-                                const node<TConstant>& bim_last_node = _house.nodes.find(bim_last_node_id)->second;
+                                const node_type& bim_start_node = _house.nodes.find(bim_start_node_id)->second;
+                                const node_type& bim_last_node = _house.nodes.find(bim_last_node_id)->second;
                                 for (size_t i = 0; i < bim_next_nodes.size(); ++i)
                                 {
                                     const node_ex& bim_next_node = bim_next_nodes[i];
                                     if (bim_next_node.used) continue;
-                                    const node<TConstant>& bim_node = _house.nodes.find(bim_next_node.id)->second;
+                                    const node_type& bim_node = _house.nodes.find(bim_next_node.id)->second;
                                     precision_type sin_angle_ex = calculateSinAngleEx(bim_start_node, bim_last_node, bim_node);
                                     sin_angle_ex_2_index.insert(std::make_pair<>(sin_angle_ex, i));
                                 }
@@ -615,7 +673,7 @@ namespace bimpp
 
                             wall_ex bim_wall_ex;
                             bim_wall_ex = bim_next_node.with_wall;
-                            bim_closed_room_ex.walls.push_back(bim_wall_ex);
+                            bim_room_ex.walls.push_back(bim_wall_ex);
 
                             if (bim_first_wall_ex == bim_next_node.with_wall)
                             {
@@ -630,10 +688,101 @@ namespace bimpp
 
                     if (bim_path_is_closed)
                     {
-                        _room_exs.push_back(bim_closed_room_ex);
+                        /// mark all repeated walls
+                        std::map<id_type, size_t> bim_walls_2_counts;
+                        for (const wall_ex& bim_wall_ex : bim_room_ex.walls)
+                        {
+                            typename std::map<id_type, size_t>::iterator it_found = bim_walls_2_counts.find(bim_wall_ex.id);
+                            if (it_found == bim_walls_2_counts.end())
+                            {
+                                bim_walls_2_counts.insert(std::make_pair<>(bim_wall_ex.id, 1));
+                            }
+                            else
+                            {
+                                ++it_found->second;
+                            }
+                        }
+                        for (wall_ex& bim_wall_ex : bim_room_ex.walls)
+                        {
+                            bim_wall_ex.repeated = (bim_walls_2_counts[bim_wall_ex.id] != 1);
+                        }
+
+                        //TODO: decide wheather the room-ex is inside or outside
+                        /// find the most left node from all unrepeated walls
+                        {
+                            size_t bim_wall_ex_index = bim_room_ex.walls.size();
+                            node_type bim_left_node(TConstant::zero_point);
+                            {
+                                id_type bim_left_node_id = TConstant::none_id;
+                                for (size_t i = 0, ic = bim_room_ex.walls.size(); i < ic; ++i)
+                                {
+                                    const wall_ex& bim_wall_ex = bim_room_ex.walls[i];
+                                    /// ignore all repeated walls
+                                    if (bim_wall_ex.repeated) continue;
+                                    const wall_type& bim_wall = _house.walls.find(bim_wall_ex.id)->second;
+                                    if (!TConstant::isValid(bim_left_node_id))
+                                    {
+                                        bim_left_node_id = bim_wall.start_node_id;
+                                        bim_left_node = _house.nodes.find(bim_left_node_id)->second;
+                                        bim_wall_ex_index = i;
+                                    }
+                                    else
+                                    {
+                                        const node_type& bim_left_node_temp = _house.nodes.find(bim_wall.start_node_id)->second;
+                                        if (bim_left_node_temp.p() < bim_left_node.p())
+                                        {
+                                            bim_left_node_id = bim_wall.start_node_id;
+                                            bim_left_node = bim_left_node_temp;
+                                            bim_wall_ex_index = i;
+                                        }
+                                    }
+                                }
+                            }
+                            if (bim_wall_ex_index < bim_room_ex.walls.size())
+                            {
+                                const size_t bim_walls_count = bim_room_ex.walls.size();
+                                const wall_ex& bim_start_wall_ex = bim_room_ex.walls[bim_wall_ex_index];
+                                const wall_ex* bim_next_wall_ex_ptr = nullptr;
+                                while (bim_next_wall_ex_ptr != &bim_start_wall_ex
+                                    && (bim_next_wall_ex_ptr == nullptr
+                                        || bim_next_wall_ex_ptr->repeated))
+                                {
+                                    if (bim_start_wall_ex.inversed)
+                                    {
+                                        bim_wall_ex_index = bim_wall_ex_index + 1;
+                                    }
+                                    else
+                                    {
+                                        bim_wall_ex_index = bim_wall_ex_index + bim_walls_count - 1;
+                                    }
+                                    bim_wall_ex_index = bim_wall_ex_index % bim_walls_count;
+                                    bim_next_wall_ex_ptr = &bim_room_ex.walls[bim_wall_ex_index];
+                                }
+                                if (bim_next_wall_ex_ptr != &bim_start_wall_ex)
+                                {
+                                    const wall_type& bim_start_wall = _house.walls.find(bim_start_wall_ex.id)->second;
+                                    const node_type bim_start_node = _house.nodes.find(bim_start_wall.end_node_id)->second;
+                                    const wall_type& bim_next_wall = _house.walls.find(bim_next_wall_ex_ptr->id)->second;
+                                    const node_type bim_next_node = _house.nodes.find(bim_start_wall.start_node_id == bim_next_wall.end_node_id ? bim_next_wall.start_node_id : bim_next_wall.end_node_id)->second;
+                                    const precision_type bim_sin_angle_ex = calculateSinAngleEx(bim_left_node
+                                        , bim_start_wall_ex.inversed ? bim_next_node : bim_start_node
+                                        , bim_start_wall_ex.inversed ? bim_start_node : bim_next_node);
+                                    if (bim_sin_angle_ex == 0)
+                                    {
+                                        bim_room_ex.side = room_side_both;
+                                    }
+                                    else
+                                    {
+                                        bim_room_ex.side = (bim_sin_angle_ex <= static_cast<precision_type>(2)) ? room_side_in : room_side_out;
+                                    }
+                                }
+                            }
+                        }
+
+                        _room_exs.push_back(bim_room_ex);
                     }
 
-                    for (typename std::map<size_t, std::vector<node_ex>>::iterator it_m = bim_nodes_2_next_nodes.begin(); it_m != bim_nodes_2_next_nodes.end();)
+                    for (typename std::map<id_type, std::vector<node_ex>>::iterator it_m = bim_nodes_2_next_nodes.begin(); it_m != bim_nodes_2_next_nodes.end();)
                     {
                         std::vector<node_ex>& bim_next_nodes = it_m->second;
                         for (typename std::vector<node_ex>::iterator it_v = bim_next_nodes.begin(); it_v != bim_next_nodes.end();)
@@ -659,10 +808,39 @@ namespace bimpp
                     }
                 }
 
-                //TODO: decide wheather the closed path is inside or outside
-                for (room_ex& closed_room_ex : _room_exs)
+                if (!TConstant::isValid(_room_id))
                 {
-                    //
+                    /// make sure the room id
+                    std::map<id_type, std::vector<id_type>> bim_rooms_2_walls;
+                    for (typename house_type::room_map::const_iterator cit = _house.rooms.cbegin();
+                        cit != _house.rooms.cend(); ++cit)
+                    {
+                        const room_type& bim_room = cit->second;
+                        id_vector bim_wall_ids = bim_room.wall_ids;
+                        std::sort(bim_wall_ids.begin(), bim_wall_ids.end());
+                        bim_rooms_2_walls.insert(std::make_pair(cit->first, bim_wall_ids));
+                    }
+
+                    for (room_ex& each_room_ex : _room_exs)
+                    {
+                        id_vector bim_wall_ids;
+                        for (const wall_ex& bim_wall_ex : each_room_ex.walls)
+                        {
+                            bim_wall_ids.push_back(bim_wall_ex.id);
+                        }
+                        if (bim_wall_ids.empty())
+                        {
+                            continue;
+                        }
+                        std::sort(bim_wall_ids.begin(), bim_wall_ids.end());
+                        for (typename std::map<id_type, std::vector<id_type>>::const_iterator cit = bim_rooms_2_walls.cbegin();
+                            cit != bim_rooms_2_walls.cend(); ++cit)
+                        {
+                            if (!isContainsForBiggerVector<>(cit->second, bim_wall_ids)) continue;
+                            each_room_ex.id = cit->first;
+                            break;
+                        }
+                    }
                 }
 
                 return !_room_exs.empty();
