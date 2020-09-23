@@ -20,106 +20,177 @@
  * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
+/*!
+ * @file plan2d.hpp
+ * 
+ * All about the plan in 2D, and are inspired by [IFC](https://technical.buildingsmart.org/standards/ifc/)
+ */
 #pragma once
 
 #include <cstdint>
+#include <cmath>
 #include <cassert>
+#include <stdexcept>
+
 #include <string>
 #include <vector>
-#include <exception>
-
-#include <boost/polygon/polygon.hpp>
+#include <array>
+#include <map>
+#include <algorithm>
 
 namespace bimpp
 {
-    /*!
-     * All about the plan in 2D
-     */
     namespace plan2d
     {
+        template<typename T = double>
+        class point
+        {
+        public:
+            typedef T   precision_type;
+
+        public:
+            point(precision_type _x = 0, precision_type _y = 0)
+                : data({ _x, _y })
+            {}
+
+        public:
+            inline precision_type x() const
+            {
+                return data[0];
+            }
+
+            inline point& x(precision_type _v)
+            {
+                data[0] = _v;
+                return *this;
+            }
+
+            inline precision_type y() const
+            {
+                return data[1];
+            }
+
+            inline point& y(precision_type _v)
+            {
+                data[1] = _v;
+                return *this;
+            }
+
+        public:
+            bool operator==(const point& _a) const
+            {
+                return (data == _a.data);
+            }
+
+            bool operator<(const point& _a) const
+            {
+                if (data[0] < _a.data[0])
+                {
+                    return true;
+                }
+                if (data[0] > _a.data[0])
+                {
+                    return false;
+                }
+                return (data[1] < _a.data[1]);
+            }
+
+        public:
+            std::array<precision_type, 2> data;
+        };
+
         /*!
          * Define some classes and declare some constant values
          */
-        template<typename T = double>
+        template<typename TPrecision = double, typename TPoint = point<TPrecision>>
         class constant
         {
         public:
+            typedef TPrecision      precision_type;
             /// Define the point type
-            typedef typename boost::polygon::point_data<T>      point_type;
-            /// Define the polygon type
-            typedef typename boost::polygon::polygon_data<T>    polygon_type;
+            typedef TPoint          point_type;
+            typedef size_t          id_type;
 
         public:
             static const point_type zero_point;     ///< Origin point
             static const point_type unit_point;     ///< Unit point
-            static const size_t     none_id;        ///< Invalid id
+            static const id_type    none_id;        ///< Invalid id
 
         public:
             /*!
              * Is id valid?
              */
-            static bool isValid(size_t _id)
+            static bool isValid(id_type _id)
             {
                 return (_id != none_id);
             }
+
+            template<typename TV>
+            static TPrecision convert(TV _v)
+            {
+                return static_cast<TPrecision>(_v);
+            }
         };
 
-        template<typename T>
-        const typename constant<T>::point_type  constant<T>::zero_point(0, 0);
-        template<typename T>
-        const typename constant<T>::point_type  constant<T>::unit_point(1, 1);
-        template<typename T>
-        const size_t                            constant<T>::none_id(-1);
+        template<typename TPrecision, typename TPoint>
+        const typename constant<TPrecision, TPoint>::point_type     constant<TPrecision, TPoint>::zero_point(0, 0);
+        template<typename TPrecision, typename TPoint>
+        const typename constant<TPrecision, TPoint>::point_type     constant<TPrecision, TPoint>::unit_point(1, 1);
+        template<typename TPrecision, typename TPoint>
+        const typename constant<TPrecision, TPoint>::id_type        constant<TPrecision, TPoint>::none_id(-1);
 
         /*!
          * A node represents a point or a joint with two walls in the 2D plan
          * 
-         * brief: A point or a joint in the plan
+         * @brief A point or a joint in the plan
          */
-        template<typename T = double>
+        template<typename TConstant = constant<>>
         class node
         {
         public:
-            typedef typename constant<T>::point_type    point_type;
+            typedef typename TConstant::precision_type  precision_type;
+            typedef typename TConstant::point_type      point_type;
 
         public:
             /*!
              * A constructor by a 2D coordinate
-             * param: _x, the value in x-axis, default is 0
-             * param: _y, the value in y-axis, default is 0
+             * 
+             * @param _x The value in x-axis, default is 0.
+             * @param _y The value in y-axis, default is 0.
              */
-            node(T _x = 0, T _y = 0)
+            node(precision_type _x = 0, precision_type _y = 0)
                 : point(_x, _y)
             {}
 
             /*!
              * A constructor by a 2D point
-             * param: _point, a 2D point, default is origin point
+             * 
+             * @param _point A 2D point, default is origin point.
              */
-            node(const point_type& _point = constant<T>::zero_point)
+            node(const point_type& _point = TConstant::zero_point)
                 : point(_point)
             {}
 
         public:
-            inline T x() const
+            inline precision_type x() const
             {
-                return x();
+                return point.x();
             }
 
-            inline node& x(T _x)
+            inline node& x(precision_type _x)
             {
-                x(_x);
+                point.x(_x);
                 return *this;
             }
 
-            inline T y() const
+            inline precision_type y() const
             {
-                return y();
+                return point.y();
             }
 
-            inline node& y(T _x)
+            inline node& y(precision_type _x)
             {
-                y(_x);
+                point.y(_x);
                 return *this;
             }
 
@@ -130,13 +201,19 @@ namespace bimpp
             point_type point;
         };
 
-        template<typename T = double>
+        /*!
+         * A wall represents a wall in the 2D plan
+         */
+        template<typename TConstant = constant<>>
         class wall
         {
         public:
-            wall(size_t _start_node_id = constant<T>::none_id
-                , size_t _end_node_id = constant<T>::none_id
-                , T _thickness = 0)
+            typedef typename TConstant::precision_type  precision_type;
+
+        public:
+            wall(size_t _start_node_id = TConstant::none_id
+                , size_t _end_node_id = TConstant::none_id
+                , precision_type _thickness = 0)
                 : kind("")
                 , start_node_id(_start_node_id)
                 , end_node_id(_end_node_id)
@@ -146,8 +223,8 @@ namespace bimpp
         public:
             inline bool isValid() const
             {
-                return (constant<T>::isValid(start_node_id)
-                    && constant<T>::isValid(end_node_id)
+                return (TConstant::isValid(start_node_id)
+                    && TConstant::isValid(end_node_id)
                     && start_node_id != end_node_id
                     && thickness >= 0);
             }
@@ -160,16 +237,23 @@ namespace bimpp
             /// The end of wall
             size_t          end_node_id;
             /// The thickness of wall
-            T               thickness;
+            precision_type  thickness;
         };
 
-        template<typename T = double>
+        /*!
+         * A hole represents a hole in the 2D plan,
+         * it might be a window or a door or a hole in a wall.
+         */
+        template<typename TConstant = constant<>>
         class hole
         {
         public:
-            hole(size_t _wall_id = constant<T>::none_id
-                , T _distance = 0
-                , T _width = 0)
+            typedef typename TConstant::precision_type  precision_type;
+
+        public:
+            hole(size_t _wall_id = TConstant::none_id
+                , precision_type _distance = 0
+                , precision_type _width = 0)
                 : kind("")
                 , direction("")
                 , wall_id(_wall_id)
@@ -180,20 +264,20 @@ namespace bimpp
         public:
             inline bool isValid() const
             {
-                return (constant<T>::isValid(wall_id)
+                return (TConstant::isValid(wall_id)
                     && distance != 0
                     && width != 0);
             }
 
         public:
-            std::string kind;
-            std::string direction;
-            size_t wall_id;
-            T distance;
-            T width;
+            std::string     kind;
+            std::string     direction;
+            size_t          wall_id;
+            precision_type  distance;
+            precision_type  width;
         };
 
-        template<typename T = double>
+        template<typename TConstant = constant<>>
         class room
         {
         public:
@@ -207,20 +291,20 @@ namespace bimpp
             std::vector<size_t> wall_ids;
         };
 
-        template<typename T = double>
+        template<typename TConstant = constant<>>
         class house
         {
         public:
-            typedef node<T>                         node_type;
+            typedef node<TConstant>                 node_type;
             typedef std::map<size_t, node_type>     node_map;
             typedef std::pair<size_t, node_type>    node_pair;
-            typedef wall<T>                         wall_type;
+            typedef wall<TConstant>                 wall_type;
             typedef std::map<size_t, wall_type>     wall_map;
             typedef std::pair<size_t, wall_type>    wall_pair;
-            typedef hole<T>                         hole_type;
+            typedef hole<TConstant>                 hole_type;
             typedef std::map<size_t, hole_type>     hole_map;
             typedef std::pair<size_t, hole_type>    hole_pair;
-            typedef room<T>                         room_type;
+            typedef room<TConstant>                 room_type;
             typedef std::map<size_t, room_type>     room_map;
             typedef std::pair<size_t, room_type>    room_pair;
 
@@ -251,25 +335,25 @@ namespace bimpp
             room_map rooms;
         };
 
-        template<typename T = double>
+        template<typename TConstant = constant<>>
         class building
         {
         public:
-            typedef house<T>                                    house_type;
-            typedef std::map<size_t, house_type>                house_map;
-            typedef typename boost::polygon::point_data<size_t> position_type;
-            typedef std::map<position_type, size_t>             potision_map;
+            typedef house<TConstant>                house_type;
+            typedef std::map<size_t, house_type>    house_map;
+            typedef typename TConstant::point_type  position_type;
+            typedef std::map<position_type, size_t> potision_map;
 
         public:
             house_map houses;
             potision_map positions;
         };
 
-        template<typename T = double>
+        template<typename TConstant = constant<>>
         class site
         {
         public:
-            typedef building<T>                     building_type;
+            typedef building<TConstant>             building_type;
             typedef std::map<size_t, building_type> building_map;
 
         public:
@@ -277,30 +361,31 @@ namespace bimpp
             building_map buildings;
         };
 
-        template<typename T = double>
+        template<typename TConstant = constant<>>
         class project
         {
         public:
-            typedef site<T>                     site_type;
-            typedef std::map<size_t, site_type> site_map;
+            typedef site<TConstant>                 site_type;
+            typedef std::map<size_t, site_type>     site_map;
 
         public:
             std::string name;
             site_map sites;
         };
 
-        template<typename T = double>
+        template<typename TConstant = constant<>>
         class algorithm
         {
         public:
-            typedef house<T>                            house_type;
+            typedef typename TConstant::precision_type  precision_type;
+            typedef house<TConstant>                    house_type;
             typedef typename house_type::node_type      node_type;
 
         public:
             class wall_ex
             {
             public:
-                wall_ex(size_t _id = constant<T>::none_id, bool _inversed = false)
+                wall_ex(size_t _id = TConstant::none_id, bool _inversed = false)
                     : id(_id)
                     , inversed(_inversed)
                 {}
@@ -316,11 +401,11 @@ namespace bimpp
                 bool inversed;
             };
 
-            class path
+            class room_ex
             {
             public:
-                path()
-                    : room_id(constant<T>::none_id)
+                room_ex()
+                    : room_id(TConstant::none_id)
                     , walls()
                     , inside(false)
                 {}
@@ -334,7 +419,7 @@ namespace bimpp
             class node_ex
             {
             public:
-                node_ex(size_t _id = constant<T>::none_id
+                node_ex(size_t _id = TConstant::none_id
                     , bool _used = false)
                     : id(_id)
                     , used(_used)
@@ -356,7 +441,7 @@ namespace bimpp
             };
 
         public:
-            typedef std::vector<path>               path_vector;
+            typedef std::vector<room_ex>               room_ex_vector;
 
         public:
             template<typename TItem>
@@ -367,51 +452,51 @@ namespace bimpp
                 _v.push_back(_i);
             }
 
-            static T calculateSinAngleEx(const node<T>& _o, const node<T>& _a, const node<T>& _b)
+            static precision_type calculateSinAngleEx(const node<TConstant>& _o, const node<TConstant>& _a, const node<TConstant>& _b)
             {
-                node<T> line_a(_a.x() - _o.x(), _a.y() - _o.y());
-                T len_a = sqrt(line_a.x() * line_a.x() + line_a.y() * line_a.y());
+                node<TConstant> line_a(_a.x() - _o.x(), _a.y() - _o.y());
+                precision_type len_a = sqrt(line_a.x() * line_a.x() + line_a.y() * line_a.y());
                 if (len_a != 0)
                 {
                     line_a.x(line_a.x() / len_a);
                     line_a.y(line_a.y() / len_a);
                 }
-                node<T> line_b(_b.x() - _o.x(), _b.y() - _o.y());
-                T len_b = sqrt(line_b.x() * line_b.x() + line_b.y() * line_b.y());
+                node<TConstant> line_b(_b.x() - _o.x(), _b.y() - _o.y());
+                precision_type len_b = sqrt(line_b.x() * line_b.x() + line_b.y() * line_b.y());
                 if (len_b != 0)
                 {
                     line_b.x(line_b.x() / len_b);
                     line_b.y(line_b.y() / len_b);
                 }
-                T sin_res = line_a.x() * line_b.y() - line_a.y() * line_b.x();
-                T cos_res = line_a.x() * line_b.x() + line_a.y() * line_b.y();
-                T res = sin_res;
-                if (cos_res < static_cast<T>(0))
+                precision_type sin_res = line_a.x() * line_b.y() - line_a.y() * line_b.x();
+                precision_type cos_res = line_a.x() * line_b.x() + line_a.y() * line_b.y();
+                precision_type res = sin_res;
+                if (cos_res < static_cast<precision_type>(0))
                 {
-                    if (sin_res >= static_cast<T>(0))
+                    if (sin_res >= static_cast<precision_type>(0))
                     {
-                        res = static_cast<T>(2) - res;
+                        res = static_cast<precision_type>(2) - res;
                     }
                     else
                     {
-                        res = static_cast<T>(-2) + res;
+                        res = static_cast<precision_type>(-2) + res;
                     }
                 }
-                if (res < static_cast<T>(0))
+                if (res < static_cast<precision_type>(0))
                 {
-                    res = static_cast<T>(4) + res;
+                    res = static_cast<precision_type>(4) + res;
                 }
                 return res;
             }
 
-            static bool calculatePaths(const house_type& _house
-                , path_vector& _paths
-                , size_t _room_id = constant<T>::none_id)
+            static bool computeRoomExs(const house_type& _house
+                , room_ex_vector& _room_exs
+                , size_t _room_id = TConstant::none_id)
             {
                 std::vector<size_t> bim_room_ids;
-                if (_room_id != constant<T>::none_id)
+                if (_room_id != TConstant::none_id)
                 {
-                    const typename house<T>::room_map::const_iterator cit_found_room = _house.rooms.find(_room_id);
+                    const typename house<TConstant>::room_map::const_iterator cit_found_room = _house.rooms.find(_room_id);
                     if (cit_found_room == _house.rooms.cend())
                     {
                         return false;
@@ -419,7 +504,7 @@ namespace bimpp
                 }
                 else
                 {
-                    for (typename house<T>::room_map::const_iterator cit = _house.rooms.cbegin(); cit != _house.rooms.cend(); ++cit)
+                    for (typename house<TConstant>::room_map::const_iterator cit = _house.rooms.cbegin(); cit != _house.rooms.cend(); ++cit)
                     {
                         bim_room_ids.push_back(cit->first);
                     }
@@ -429,10 +514,10 @@ namespace bimpp
 
                 for (size_t bim_room_id : bim_room_ids)
                 {
-                    const room<T>& bim_room = _house.rooms.find(bim_room_id)->second;
+                    const room<TConstant>& bim_room = _house.rooms.find(bim_room_id)->second;
                     for (const size_t wall_id : bim_room.wall_ids)
                     {
-                        const wall<T>& bim_wall = _house.walls.find(wall_id)->second;
+                        const wall<TConstant>& bim_wall = _house.walls.find(wall_id)->second;
                         node_ex bim_next_node;
                         bim_next_node.with_wall.id = wall_id;
                         {
@@ -474,14 +559,14 @@ namespace bimpp
                 /// compute the path/edges of the room
                 while (!bim_nodes_2_next_nodes.empty())
                 {
-                    path bim_closed_path;
-                    bim_closed_path.room_id = _room_id;
-                    bool bim_path_is_closed = false;
+                    room_ex bim_closed_room_ex;
+                    bim_closed_room_ex.room_id  = _room_id;
+                    bool bim_path_is_closed     = false;
 
-                    size_t bim_start_node_id = bim_nodes_2_next_nodes.cbegin()->first;
-                    size_t bim_last_node_id = constant<T>::none_id;
-                    size_t bim_first_wall_start_node_id = constant<T>::none_id;
-                    size_t bim_first_wall_end_node_id = constant<T>::none_id;
+                    size_t bim_start_node_id            = bim_nodes_2_next_nodes.cbegin()->first;
+                    size_t bim_last_node_id             = TConstant::none_id;
+                    size_t bim_first_wall_start_node_id = TConstant::none_id;
+                    size_t bim_first_wall_end_node_id   = TConstant::none_id;
                     wall_ex bim_first_wall_ex;
                     while (true)
                     {
@@ -490,7 +575,7 @@ namespace bimpp
                         {
                             break;
                         }
-                        if (bim_last_node_id == constant<T>::none_id)
+                        if (bim_last_node_id == TConstant::none_id)
                         {
                             bim_last_node_id = bim_start_node_id;
                             node_ex& bim_next_node = bim_next_nodes[0];
@@ -505,17 +590,17 @@ namespace bimpp
                                 throw std::invalid_argument("contains invalid wall!");
                             }
 
-                            std::map<T, size_t> sin_angle_ex_2_index;
+                            std::map<precision_type, size_t> sin_angle_ex_2_index;
                             {
                                 /// sort the next node by the `sin-angle-ex`
-                                const node<T>& bim_start_node = _house.nodes.find(bim_start_node_id)->second;
-                                const node<T>& bim_last_node = _house.nodes.find(bim_last_node_id)->second;
+                                const node<TConstant>& bim_start_node = _house.nodes.find(bim_start_node_id)->second;
+                                const node<TConstant>& bim_last_node = _house.nodes.find(bim_last_node_id)->second;
                                 for (size_t i = 0; i < bim_next_nodes.size(); ++i)
                                 {
                                     const node_ex& bim_next_node = bim_next_nodes[i];
                                     if (bim_next_node.used) continue;
-                                    const node<T>& bim_node = _house.nodes.find(bim_next_node.id)->second;
-                                    T sin_angle_ex = calculateSinAngleEx(bim_start_node, bim_last_node, bim_node);
+                                    const node<TConstant>& bim_node = _house.nodes.find(bim_next_node.id)->second;
+                                    precision_type sin_angle_ex = calculateSinAngleEx(bim_start_node, bim_last_node, bim_node);
                                     sin_angle_ex_2_index.insert(std::make_pair<>(sin_angle_ex, i));
                                 }
                             }
@@ -524,13 +609,13 @@ namespace bimpp
                                 break;
                             }
 
-                            typename std::map<T, size_t>::const_iterator sin_angle_ex_2_index_last = --sin_angle_ex_2_index.cend();
+                            typename std::map<precision_type, size_t>::const_iterator sin_angle_ex_2_index_last = --sin_angle_ex_2_index.cend();
                             node_ex& bim_next_node = bim_next_nodes[sin_angle_ex_2_index_last->second];
                             bim_next_node.used = true;
 
                             wall_ex bim_wall_ex;
                             bim_wall_ex = bim_next_node.with_wall;
-                            bim_closed_path.walls.push_back(bim_wall_ex);
+                            bim_closed_room_ex.walls.push_back(bim_wall_ex);
 
                             if (bim_first_wall_ex == bim_next_node.with_wall)
                             {
@@ -545,7 +630,7 @@ namespace bimpp
 
                     if (bim_path_is_closed)
                     {
-                        _paths.push_back(bim_closed_path);
+                        _room_exs.push_back(bim_closed_room_ex);
                     }
 
                     for (typename std::map<size_t, std::vector<node_ex>>::iterator it_m = bim_nodes_2_next_nodes.begin(); it_m != bim_nodes_2_next_nodes.end();)
@@ -574,13 +659,13 @@ namespace bimpp
                     }
                 }
 
-                /// decide wheather the closed path is inside or outside
-                for (path& closed_path : _paths)
+                //TODO: decide wheather the closed path is inside or outside
+                for (room_ex& closed_room_ex : _room_exs)
                 {
                     //
                 }
 
-                return !_paths.empty();
+                return !_room_exs.empty();
             }
         };
     }
