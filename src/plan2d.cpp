@@ -33,13 +33,13 @@ int main(int argc, char* argv[])
 #endif
 
     /// Make a house
-    bimpp::plan2d::house<double> bimpp_house;
+    bimpp::plan2d::house<> bimpp_house;
 
     for (size_t y = 0; y < 5; ++y)
     {
         for (size_t x = 0; x < 5; ++x)
         {
-            bimpp_house.nodes.insert(std::make_pair<>(x * 10 + y, bimpp::plan2d::node<>(x, y)));
+            bimpp_house.nodes.insert(std::make_pair<>(x * 10 + y, bimpp::plan2d::node<>(bimpp::plan2d::constant<>::convert(x), bimpp::plan2d::constant<>::convert(y))));
         }
     }
 
@@ -67,6 +67,6 @@ int main(int argc, char* argv[])
     bimpp_house.rooms.insert(std::make_pair<>(0, bimpp_room));
 
     bimpp::plan2d::algorithm<>::room_ex_vector bimpp_room_exs;
-    bimpp::plan2d::algorithm<>::calculateRoomExs(bimpp_house, bimpp_room_exs);
+    bimpp::plan2d::algorithm<>::computeRoomExs(bimpp_house, bimpp_room_exs);
     return 0;
 }
