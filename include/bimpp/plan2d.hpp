@@ -692,7 +692,7 @@ namespace bimpp
                         std::map<id_type, size_t> bim_walls_2_counts;
                         for (const wall_ex& bim_wall_ex : bim_room_ex.walls)
                         {
-                            std::map<id_type, size_t>::iterator it_found = bim_walls_2_counts.find(bim_wall_ex.id);
+                            typename std::map<id_type, size_t>::iterator it_found = bim_walls_2_counts.find(bim_wall_ex.id);
                             if (it_found == bim_walls_2_counts.end())
                             {
                                 bim_walls_2_counts.insert(std::make_pair<>(bim_wall_ex.id, 1));
@@ -812,7 +812,7 @@ namespace bimpp
                 {
                     /// make sure the room id
                     std::map<id_type, std::vector<id_type>> bim_rooms_2_walls;
-                    for (house_type::room_map::const_iterator cit = _house.rooms.cbegin();
+                    for (typename house_type::room_map::const_iterator cit = _house.rooms.cbegin();
                         cit != _house.rooms.cend(); ++cit)
                     {
                         const room_type& bim_room = cit->second;
@@ -833,7 +833,7 @@ namespace bimpp
                             continue;
                         }
                         std::sort(bim_wall_ids.begin(), bim_wall_ids.end());
-                        for (std::map<id_type, std::vector<id_type>>::const_iterator cit = bim_rooms_2_walls.cbegin();
+                        for (typename std::map<id_type, std::vector<id_type>>::const_iterator cit = bim_rooms_2_walls.cbegin();
                             cit != bim_rooms_2_walls.cend(); ++cit)
                         {
                             if (!isContainsForBiggerVector<>(cit->second, bim_wall_ids)) continue;
