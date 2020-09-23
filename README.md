@@ -1,8 +1,6 @@
 # Plan 2D
 
-This project is for plan in 2D.
-
-This is `header-only` project. It contains:
+This project is for plan in 2D. And it is inspired by [IFC].
 
 ## Features
 
@@ -38,4 +36,4 @@ This is `header-only` project. It contains:
  */
 ```
 
-[boost]: https://www.boost.org/
+[IFC]: https://technical.buildingsmart.org/standards/ifc/
