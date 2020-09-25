@@ -62,11 +62,12 @@ int main(int argc, char* argv[])
     bimpp::plan2d::room<> bimpp_room;
     bimpp_room.wall_ids = {
         1034, 1101, 1123, 1201, 1234, 1312, 1323, 1423, 1434,
-        2001, 2012, 2023, 2034, 2112, 2123, 2134, 2223, 2234, 2301, 2334, 2401, 2412, 2423, 2434
+        2001, 2012, 2023, 2034, 2112, 2123, 2134, 2223, 2234, 2301, 2334, 2401, 2412, 2423, 2434,
+        1012, 1112, 2101, 2201,
     };
     bimpp_house.rooms.insert(std::make_pair<>(0, bimpp_room));
-    bimpp_room.wall_ids = { 1012, 1112, 2101, 2201 };
-    bimpp_house.rooms.insert(std::make_pair<>(1, bimpp_room));
+    //bimpp_room.wall_ids = { 1012, 1112, 2101, 2201 };
+    //bimpp_house.rooms.insert(std::make_pair<>(1, bimpp_room));
 
     bimpp::plan2d::algorithm<>::room_ex_vector bimpp_room_exs;
     bimpp::plan2d::algorithm<>::computeRoomExs(bimpp_house, bimpp_room_exs);

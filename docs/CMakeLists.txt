@@ -9,6 +9,9 @@ set(FILE_LIST ${FILE_LIST} ${FILE_LIST_ROOT})
 
 set(FILE_LIST_DOCS
     ${BIMPP_PLAN2D_PATH_ROOT}/docs/Doxyfile
+    ${BIMPP_PLAN2D_PATH_ROOT}/docs/conf.py
+    ${BIMPP_PLAN2D_PATH_ROOT}/docs/index.rst
+    ${BIMPP_PLAN2D_PATH_ROOT}/docs/requirements.txt
     )
 source_group("docs" FILES ${FILE_LIST_DOCS})
 set(FILE_LIST ${FILE_LIST} ${FILE_LIST_DOCS})
