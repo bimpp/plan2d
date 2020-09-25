@@ -4,6 +4,8 @@ Algorithms
 Data structures
 ---------------
 
+Define some data for algorithm.
+
 .. doxygenclass:: bimpp::plan2d::algorithm::wall_ex
    :members:
 
@@ -13,9 +15,15 @@ Data structures
 .. doxygenclass:: bimpp::plan2d::algorithm::room_ex
    :members:
 
+.. doxygenenum:: bimpp::plan2d::algorithm::room_side
+
 Functions
 ---------
 
+They implement some algorithms that.
+
+.. doxygenfunction:: bimpp::plan2d::algorithm::isContainsForBiggerVector
+
+.. doxygenfunction:: bimpp::plan2d::algorithm::calculateSinAngleEx
+
 .. doxygenfunction:: bimpp::plan2d::algorithm::computeRoomExs
-   :outline:
-   :no-link:

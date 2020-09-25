@@ -424,11 +424,14 @@ namespace bimpp
                 bool        repeated;
             };
 
+            /*!
+             * An enum, it means the direction of the room's edges.
+             */
             enum room_side
             {
-                room_side_both,
-                room_side_in,
-                room_side_out,
+                room_side_both,     ///< Don't know the room faces inside or outside
+                room_side_in,       ///< The room faces inside
+                room_side_out,      ///< The room faces outside
             };
 
             class room_ex
@@ -482,6 +485,14 @@ namespace bimpp
                 _v.push_back(_i);
             }
 
+            /*!
+             * Is the `_all` contains `_sub`?
+             * 
+             * **Importance**: The `_all` and `_sub` must be sorted from small to big.
+             * 
+             * @param _all A vector contains all items
+             * @param _sub A vector contains a part of items
+             */
             template<typename TItem>
             static bool isContainsForBiggerVector(const std::vector<TItem>& _all, const std::vector<TItem>& _sub)
             {
@@ -507,43 +518,70 @@ namespace bimpp
                 return (s_index == s_size);
             }
 
+            /*!
+             * Calculate the special sine of a angle between \f$ \vec{OA} \f$ and \f$ \vec{OB} \f$.
+             * @f[
+             * f(\alpha) =
+             * \begin{cases}
+             * \sin(\alpha)      & \quad \text{if } 0^{\circ} \leq \alpha \leq 90^{\circ}\\
+             * 2 - \sin(\alpha)      & \quad \text{if } 90^{\circ} < \alpha < 270^{\circ}\\
+             * 4 - \sin(\alpha)      & \quad \text{if } 270^{\circ} \leq \alpha < 360^{\circ}
+             * \end{cases}
+             * @f]
+             * 
+             * @param _o The \f$ {O} \f$ node(point)
+             * @param _a The \f$ {A} \f$ node(point)
+             * @param _b The \f$ {B} \f$ node(point)
+             */
             static precision_type calculateSinAngleEx(const node_type& _o, const node_type& _a, const node_type& _b)
             {
+                /// Make the line \f$ \vec{OA} \f$
                 node_type line_a(_a.x() - _o.x(), _a.y() - _o.y());
+                /// Normalize the line \f$ \vec{OA} \f$
                 precision_type len_a = sqrt(line_a.x() * line_a.x() + line_a.y() * line_a.y());
                 if (len_a != 0)
                 {
                     line_a.x(line_a.x() / len_a);
                     line_a.y(line_a.y() / len_a);
                 }
+                /// Make the line \f$ \vec{OB} \f$
                 node_type line_b(_b.x() - _o.x(), _b.y() - _o.y());
+                /// Normalize the line \f$ \vec{OB} \f$
                 precision_type len_b = sqrt(line_b.x() * line_b.x() + line_b.y() * line_b.y());
                 if (len_b != 0)
                 {
                     line_b.x(line_b.x() / len_b);
                     line_b.y(line_b.y() / len_b);
                 }
+                /// Compute the dot product and the cross product between \f$ \vec{OA} \f$ and \f$ \vec{OB} \f$
                 precision_type sin_res = line_a.x() * line_b.y() - line_a.y() * line_b.x();
                 precision_type cos_res = line_a.x() * line_b.x() + line_a.y() * line_b.y();
                 precision_type res = sin_res;
-                if (cos_res < static_cast<precision_type>(0))
+                if (cos_res >= static_cast<precision_type>(0))
                 {
                     if (sin_res >= static_cast<precision_type>(0))
                     {
-                        res = static_cast<precision_type>(2) - res;
+                        //
                     }
                     else
                     {
-                        res = static_cast<precision_type>(-2) + res;
+                        res = static_cast<precision_type>(4) + res;
                     }
                 }
-                if (res < static_cast<precision_type>(0))
+                else
                 {
-                    res = static_cast<precision_type>(4) + res;
+                    res = static_cast<precision_type>(2) - res;
                 }
                 return res;
             }
 
+            /*!
+             * Compute all room's edges by all walls. It use array, and no recursion.
+             * 
+             * @param _house The house
+             * @param _room_exs Output the room's edge list
+             * @param _room_id The special id of room, find all rooms if it is none
+             */
             static bool computeRoomExs(const house_type& _house
                 , room_ex_vector& _room_exs
                 , id_type _room_id = TConstant::none_id)
@@ -614,7 +652,7 @@ namespace bimpp
                     return false;
                 }
 
-                /// compute the path/edges of the room
+                /// Compute the path/edges of the room
                 while (!bim_nodes_2_next_nodes.empty())
                 {
                     room_ex bim_room_ex;
