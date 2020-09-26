@@ -576,7 +576,7 @@ namespace bimpp
             }
 
             /*!
-             * Compute all room's edges by all walls. It use array, and no recursion.
+             * Compute all room's edges by all walls. It don't use recursion.
              * 
              * @param _house The house
              * @param _room_exs Output the room's edge list
