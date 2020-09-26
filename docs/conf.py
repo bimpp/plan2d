@@ -60,3 +60,6 @@ breathe_projects = {
     "plan2d": "../output/code/xml"
 }
 breathe_default_project = "plan2d"
+
+import subprocess
+subprocess.call('cd ..; doxygen docs/Doxyfile', shell=True)
