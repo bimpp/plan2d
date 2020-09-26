@@ -62,4 +62,4 @@ breathe_projects = {
 breathe_default_project = "plan2d"
 
 import subprocess
-subprocess.call('cd ..; doxygen docs/Doxyfile', shell=True)
+subprocess.call('cd ..; mkdir output; mkdir output/code; doxygen docs/Doxyfile', shell=True)
