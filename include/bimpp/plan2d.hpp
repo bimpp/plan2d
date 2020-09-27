@@ -566,9 +566,9 @@ namespace bimpp
             }
 
             /*!
-             * Calculate the special angle between \f$ \vec{OA} \f$ and \f$ \vec{OB} \f$.
+             * Calculate the angle \f$ \alpha \f$ between \f$ \vec{OA} \f$ and \f$ \vec{OB} \f$.
              * @f[
-             * f(\alpha) =
+             * f(\vec{OA}, \vec{OB}) =
              * \begin{cases}
              * \cos^{-1}(\vec{OA} \cdot \vec{OB})               & \quad \text{if } 0^{\circ} \leq \alpha \leq 180^{\circ}\\
              * \pi * 2 - \cos^{-1}(\vec{OA} \cdot \vec{OB})     & \quad \text{if } 180^{\circ} < \alpha < 360^{\circ}
@@ -601,13 +601,13 @@ namespace bimpp
             }
 
             /*!
-             * Calculate the increased sine of a angle between \f$ \vec{OA} \f$ and \f$ \vec{OB} \f$.
+             * Calculate the increased sine of a angle \f$ \alpha \f$ between \f$ \vec{OA} \f$ and \f$ \vec{OB} \f$.
              * @f[
-             * f(\alpha) =
+             * f(\vec{OA}, \vec{OB}) =
              * \begin{cases}
-             * \sin(\alpha)      & \quad \text{if } 0^{\circ} \leq \alpha \leq 90^{\circ}\\
-             * 2 - \sin(\alpha)      & \quad \text{if } 90^{\circ} < \alpha < 270^{\circ}\\
-             * 4 - \sin(\alpha)      & \quad \text{if } 270^{\circ} \leq \alpha < 360^{\circ}
+             * \vert\vec{OA} \times \vec{OB}\vert         & \quad \text{if } 0^{\circ} \leq \alpha \leq 90^{\circ}\\
+             * 2 - \vert\vec{OA} \times \vec{OB}\vert     & \quad \text{if } 90^{\circ} < \alpha < 270^{\circ}\\
+             * 4 + \vert\vec{OA} \times \vec{OB}\vert     & \quad \text{if } 270^{\circ} \leq \alpha < 360^{\circ}
              * \end{cases}
              * @f]
              * 
@@ -644,12 +644,12 @@ namespace bimpp
             }
 
             /*!
-             * Calculate the increased cosine of a angle between \f$ \vec{OA} \f$ and \f$ \vec{OB} \f$.
+             * Calculate the increased cosine of a angle \f$ \alpha \f$ between \f$ \vec{OA} \f$ and \f$ \vec{OB} \f$.
              * @f[
-             * f(\alpha) =
+             * f(\vec{OA}, \vec{OB}) =
              * \begin{cases}
-             * 1 - \cos(\alpha)      & \quad \text{if } 0^{\circ} \leq \alpha \leq 180^{\circ}\\
-             * 3 + \cos(\alpha)      & \quad \text{if } 180^{\circ} < \alpha < 360^{\circ}
+             * 1 - \vec{OA} \cdot \vec{OB}      & \quad \text{if } 0^{\circ} \leq \alpha \leq 180^{\circ}\\
+             * 3 + \vec{OA} \cdot \vec{OB}      & \quad \text{if } 180^{\circ} < \alpha < 360^{\circ}
              * \end{cases}
              * @f]
              *
@@ -679,7 +679,7 @@ namespace bimpp
             }
 
             /*!
-             * Compute all room's edges by all walls. It use array, and no recursion.
+             * Compute all room's edges by all walls, and don't use recursion.
              * 
              * @param _house The house
              * @param _room_exs Output the room's edge list
