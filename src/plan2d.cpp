@@ -32,6 +32,35 @@ int main(int argc, char* argv[])
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
+#if 1
+#if defined(WIN32) && !defined(NDEBUG)
+    /// Compare the performance
+    bimpp::plan2d::node<> node_o(0.0, 0.0);
+    bimpp::plan2d::node<> node_a(1.0, 0.0);
+    std::vector<bimpp::plan2d::node<>> node_bs;
+    for (size_t i = 0; i < 3000000; ++i)
+    {
+        bimpp::plan2d::node<> node_b((rand() / static_cast<double>(RAND_MAX)) * 100.0 - 50.0, (rand() / static_cast<double>(RAND_MAX)) * 100.0 - 50.0);
+        node_bs.push_back(node_b);
+    }
+    std::vector<double> node_aob_angle_ex;
+    for (size_t i = 0, ic = node_bs.size(); i < ic; ++i)
+    {
+        node_aob_angle_ex.push_back(bimpp::plan2d::algorithm<>::calculateAngleEx(node_o, node_a, node_bs[i]));
+    }
+    std::vector<double> node_aob_sin_angle_ex;
+    for (size_t i = 0, ic = node_bs.size(); i < ic; ++i)
+    {
+        node_aob_sin_angle_ex.push_back(bimpp::plan2d::algorithm<>::calculateSinAngleEx(node_o, node_a, node_bs[i]));
+    }
+    std::vector<double> node_aob_cos_angle_ex;
+    for (size_t i = 0, ic = node_bs.size(); i < ic; ++i)
+    {
+        node_aob_cos_angle_ex.push_back(bimpp::plan2d::algorithm<>::calculateCosAngleEx(node_o, node_a, node_bs[i]));
+    }
+#endif
+#endif
+
     /// Make a house
     bimpp::plan2d::house<> bimpp_house;
 

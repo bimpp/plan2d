@@ -38,6 +38,10 @@
 #include <map>
 #include <algorithm>
 
+#if !defined(M_PI)
+#define M_PI       3.14159265358979323846   // pi
+#endif
+
 namespace bimpp
 {
     namespace plan2d
@@ -54,6 +58,10 @@ namespace bimpp
         public:
             point(precision_type _x = 0, precision_type _y = 0)
                 : data({ _x, _y })
+            {}
+
+            point(const point& _a)
+                : data(_a.data)
             {}
 
         public:
@@ -80,6 +88,12 @@ namespace bimpp
             }
 
         public:
+            point& operator=(const point& _a)
+            {
+                data = _a.data;
+                return *this;
+            }
+
             bool operator==(const point& _a) const
             {
                 return (data == _a.data);
@@ -96,6 +110,38 @@ namespace bimpp
                     return false;
                 }
                 return (data[1] < _a.data[1]);
+            }
+
+            point operator+(const point& _a) const
+            {
+                return point(x() + _a.x(), y() + _a.y());
+            }
+
+            point operator-(const point& _a) const
+            {
+                return point(x() - _a.x(), y() - _a.y());
+            }
+
+            inline precision_type dot(const point& _a) const
+            {
+                return (x() * _a.y() - y() * _a.x());
+            }
+
+            inline precision_type cross(const point& _a) const
+            {
+                return (x() * _a.x() + y() * _a.y());
+            }
+
+            inline precision_type normalize()
+            {
+                precision_type len = sqrt(x() * x() + y() * y());
+                if (len != static_cast<precision_type>(0)
+                    && len != static_cast<precision_type>(1))
+                {
+                    x(x() / len);
+                    y(y() / len);
+                }
+                return len;
             }
 
         public:
@@ -395,6 +441,7 @@ namespace bimpp
         {
         public:
             typedef typename TConstant::precision_type  precision_type;
+            typedef typename TConstant::point_type      point_type;
             typedef typename TConstant::id_type         id_type;
             typedef std::vector<id_type>                id_vector;
             typedef node<TConstant>                     node_type;
@@ -519,7 +566,42 @@ namespace bimpp
             }
 
             /*!
-             * Calculate the special sine of a angle between \f$ \vec{OA} \f$ and \f$ \vec{OB} \f$.
+             * Calculate the special angle between \f$ \vec{OA} \f$ and \f$ \vec{OB} \f$.
+             * @f[
+             * f(\alpha) =
+             * \begin{cases}
+             * \cos^{-1}(\vec{OA} \cdot \vec{OB})               & \quad \text{if } 0^{\circ} \leq \alpha \leq 180^{\circ}\\
+             * \pi * 2 - \cos^{-1}(\vec{OA} \cdot \vec{OB})     & \quad \text{if } 180^{\circ} < \alpha < 360^{\circ}
+             * \end{cases}
+             * @f]
+             *
+             * @param _o The \f$ {O} \f$ node(point)
+             * @param _a The \f$ {A} \f$ node(point)
+             * @param _b The \f$ {B} \f$ node(point)
+             */
+            static precision_type calculateAngleEx(const node_type& _o, const node_type& _a, const node_type& _b)
+            {
+                /// Make the line \f$ \vec{OA} \f$, and normalize it.
+                point_type line_a(_a.p() - _o.p()); line_a.normalize();
+                /// Make the line \f$ \vec{OB} \f$, and normalize it.
+                point_type line_b(_b.p() - _o.p()); line_b.normalize();
+                /// Compute the dot product and the cross product between \f$ \vec{OA} \f$ and \f$ \vec{OB} \f$
+                precision_type sin_res = line_a.dot(line_b);
+                precision_type cos_res = line_a.cross(line_b);
+                precision_type res = static_cast<precision_type>(0);
+                if (sin_res >= 0)
+                {
+                    res = static_cast<precision_type>(acos(cos_res));
+                }
+                else
+                {
+                    res = static_cast<precision_type>(M_PI * 2.0 - acos(cos_res));
+                }
+                return res;
+            }
+
+            /*!
+             * Calculate the increased sine of a angle between \f$ \vec{OA} \f$ and \f$ \vec{OB} \f$.
              * @f[
              * f(\alpha) =
              * \begin{cases}
@@ -535,48 +617,69 @@ namespace bimpp
              */
             static precision_type calculateSinAngleEx(const node_type& _o, const node_type& _a, const node_type& _b)
             {
-                /// Make the line \f$ \vec{OA} \f$
-                node_type line_a(_a.x() - _o.x(), _a.y() - _o.y());
-                /// Normalize the line \f$ \vec{OA} \f$
-                precision_type len_a = sqrt(line_a.x() * line_a.x() + line_a.y() * line_a.y());
-                if (len_a != 0)
-                {
-                    line_a.x(line_a.x() / len_a);
-                    line_a.y(line_a.y() / len_a);
-                }
-                /// Make the line \f$ \vec{OB} \f$
-                node_type line_b(_b.x() - _o.x(), _b.y() - _o.y());
-                /// Normalize the line \f$ \vec{OB} \f$
-                precision_type len_b = sqrt(line_b.x() * line_b.x() + line_b.y() * line_b.y());
-                if (len_b != 0)
-                {
-                    line_b.x(line_b.x() / len_b);
-                    line_b.y(line_b.y() / len_b);
-                }
+                /// Make the line \f$ \vec{OA} \f$, and normalize it.
+                point_type line_a(_a.p() - _o.p()); line_a.normalize();
+                /// Make the line \f$ \vec{OB} \f$, and normalize it.
+                point_type line_b(_b.p() - _o.p()); line_b.normalize();
                 /// Compute the dot product and the cross product between \f$ \vec{OA} \f$ and \f$ \vec{OB} \f$
-                precision_type sin_res = line_a.x() * line_b.y() - line_a.y() * line_b.x();
-                precision_type cos_res = line_a.x() * line_b.x() + line_a.y() * line_b.y();
-                precision_type res = sin_res;
+                precision_type sin_res = line_a.dot(line_b);
+                precision_type cos_res = line_a.cross(line_b);
+                precision_type res = static_cast<precision_type>(0);
                 if (cos_res >= static_cast<precision_type>(0))
                 {
                     if (sin_res >= static_cast<precision_type>(0))
                     {
-                        //
+                        res = sin_res;
                     }
                     else
                     {
-                        res = static_cast<precision_type>(4) + res;
+                        res = static_cast<precision_type>(4) + sin_res;
                     }
                 }
                 else
                 {
-                    res = static_cast<precision_type>(2) - res;
+                    res = static_cast<precision_type>(2) - sin_res;
                 }
                 return res;
             }
 
             /*!
-             * Compute all room's edges by all walls. It don't use recursion.
+             * Calculate the increased cosine of a angle between \f$ \vec{OA} \f$ and \f$ \vec{OB} \f$.
+             * @f[
+             * f(\alpha) =
+             * \begin{cases}
+             * 1 - \cos(\alpha)      & \quad \text{if } 0^{\circ} \leq \alpha \leq 180^{\circ}\\
+             * 3 + \cos(\alpha)      & \quad \text{if } 180^{\circ} < \alpha < 360^{\circ}
+             * \end{cases}
+             * @f]
+             *
+             * @param _o The \f$ {O} \f$ node(point)
+             * @param _a The \f$ {A} \f$ node(point)
+             * @param _b The \f$ {B} \f$ node(point)
+             */
+            static precision_type calculateCosAngleEx(const node_type& _o, const node_type& _a, const node_type& _b)
+            {
+                /// Make the line \f$ \vec{OA} \f$, and normalize it.
+                point_type line_a(_a.p() - _o.p()); line_a.normalize();
+                /// Make the line \f$ \vec{OB} \f$, and normalize it.
+                point_type line_b(_b.p() - _o.p()); line_b.normalize();
+                /// Compute the dot product and the cross product between \f$ \vec{OA} \f$ and \f$ \vec{OB} \f$
+                precision_type sin_res = line_a.dot(line_b);
+                precision_type cos_res = line_a.cross(line_b);
+                precision_type res = static_cast<precision_type>(0);
+                if (sin_res >= static_cast<precision_type>(0))
+                {
+                    res = static_cast<precision_type>(1) - cos_res;
+                }
+                else
+                {
+                    res = static_cast<precision_type>(3) + cos_res;
+                }
+                return res;
+            }
+
+            /*!
+             * Compute all room's edges by all walls. It use array, and no recursion.
              * 
              * @param _house The house
              * @param _room_exs Output the room's edge list
@@ -802,7 +905,7 @@ namespace bimpp
                                     const node_type bim_start_node = _house.nodes.find(bim_start_wall.end_node_id)->second;
                                     const wall_type& bim_next_wall = _house.walls.find(bim_next_wall_ex_ptr->id)->second;
                                     const node_type bim_next_node = _house.nodes.find(bim_start_wall.start_node_id == bim_next_wall.end_node_id ? bim_next_wall.start_node_id : bim_next_wall.end_node_id)->second;
-                                    const precision_type bim_sin_angle_ex = calculateSinAngleEx(bim_left_node
+                                    const precision_type bim_sin_angle_ex = calculateCosAngleEx(bim_left_node
                                         , bim_start_wall_ex.inversed ? bim_next_node : bim_start_node
                                         , bim_start_wall_ex.inversed ? bim_start_node : bim_next_node);
                                     if (bim_sin_angle_ex == 0)

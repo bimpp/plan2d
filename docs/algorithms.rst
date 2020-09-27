@@ -24,6 +24,10 @@ They implement some algorithms that.
 
 .. doxygenfunction:: bimpp::plan2d::algorithm::isContainsForBiggerVector
 
+.. doxygenfunction:: bimpp::plan2d::algorithm::calculateAngleEx
+
 .. doxygenfunction:: bimpp::plan2d::algorithm::calculateSinAngleEx
+
+.. doxygenfunction:: bimpp::plan2d::algorithm::calculateCosAngleEx
 
 .. doxygenfunction:: bimpp::plan2d::algorithm::computeRoomExs
