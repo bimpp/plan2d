@@ -6,6 +6,9 @@
 Welcome to Plan 2D's documentation!
 ===================================
 
+* Document_
+* GitRepo_
+
 This project is for plan in 2D. And it is inspired by IFC_.
 
 Features
@@ -58,4 +61,6 @@ License
     * OTHER DEALINGS IN THE SOFTWARE.
     */
 
+.. _Document: https://bimpp.io/docs/plan2d
+.. _GitRepo: https://gitee.com/bimpp/plan2d
 .. _IFC: https://technical.buildingsmart.org/standards/ifc/
