@@ -56,6 +56,10 @@ html_static_path = [
     '_static'
 ]
 
+html_css_files = [
+    'css/main.css'
+]
+
 # Breathe Configuration
 breathe_projects = {
     "plan2d": "../output/code/xml"

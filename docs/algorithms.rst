@@ -1,21 +1,21 @@
 Algorithms
 ==========
 
+Enumerations
+------------
+
+.. doxygenenum:: bimpp::plan2d::algorithm::room_side
+
 Data structures
 ---------------
 
 Define some data for algorithm.
 
 .. doxygenclass:: bimpp::plan2d::algorithm::wall_ex
-   :members:
 
 .. doxygenclass:: bimpp::plan2d::algorithm::node_ex
-   :members:
 
 .. doxygenclass:: bimpp::plan2d::algorithm::room_ex
-   :members:
-
-.. doxygenenum:: bimpp::plan2d::algorithm::room_side
 
 Functions
 ---------
@@ -26,14 +26,26 @@ They implement some algorithms that.
 
 .. doxygenfunction:: bimpp::plan2d::algorithm::calculateAngleEx
 
-.. image:: _static/plot_angleex.png
+.. image:: _static/images/plot_angleex.png
 
 .. doxygenfunction:: bimpp::plan2d::algorithm::calculateSinAngleEx
 
-.. image:: _static/plot_sinex.png
+.. image:: _static/images/plot_sinex.png
 
 .. doxygenfunction:: bimpp::plan2d::algorithm::calculateCosAngleEx
 
-.. image:: _static/plot_cosex.png
+.. image:: _static/images/plot_cosex.png
 
 .. doxygenfunction:: bimpp::plan2d::algorithm::computeRoomExs
+
+.. image:: _static/images/side_type.png
+
+This function computes some edges of all areas that are wrapped by colourful lines.
+
+.. role:: blue
+.. role:: red
+.. role:: green
+
+* :blue:`Blue lines`: Means the `room_ex` is inside of the lines, and the `side_type` is `bimpp::plan2d::algorithm::room_side_in`.
+* :red:`Red lines`: Means the `room_ex` is outside of the lines, and the `side_type` is `bimpp::plan2d::algorithm::room_side_out`.
+* :green:`Green lines`: Means the `room_ex` is both inside and outside of the lines, and the `side_type` is `bimpp::plan2d::algorithm::room_side_both`.
