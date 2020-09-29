@@ -28,13 +28,19 @@ They implement some algorithms that.
 
 .. image:: _static/images/plot_angleex.png
 
+**x-axis**: :math:`cos(\alpha)`; **y-axis**: :math:`\alpha` in radians
+
 .. doxygenfunction:: bimpp::plan2d::algorithm::calculateSinAngleEx
 
 .. image:: _static/images/plot_sinex.png
 
+**x-axis**: :math:`\alpha` in radians; **y-axis**: increased :math:`sin(\alpha)`
+
 .. doxygenfunction:: bimpp::plan2d::algorithm::calculateCosAngleEx
 
 .. image:: _static/images/plot_cosex.png
+
+**x-axis**: :math:`\alpha` in radians; **y-axis**: increased :math:`cos(\alpha)`
 
 .. doxygenfunction:: bimpp::plan2d::algorithm::computeRoomExs
 
