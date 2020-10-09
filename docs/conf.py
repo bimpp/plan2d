@@ -60,6 +60,10 @@ html_css_files = [
     'css/main.css'
 ]
 
+html_js_files = [
+    'js/matomo.js'
+]
+
 # Breathe Configuration
 breathe_projects = {
     "plan2d": "../output/code/xml"
