@@ -1,0 +1,76 @@
+name: 'build'
+
+on:
+  push:
+    branches: [ '*' ]
+    paths-ignore:
+    - '!.github/build.yml'
+    - 'docs/**'
+    - '.coveralls.yml'
+    - '.readthedocs.yml'
+    - '.git*'
+    - '*.md'
+    - 'LICENSE'
+
+jobs:
+  check:
+    name: 'check by cppcheck'
+    runs-on: ubuntu-latest
+    steps:
+    - name: 'install cppcheck'
+      run: sudo apt-get install cppcheck
+    - name: 'checkout'
+      uses: actions/checkout@v2
+    - name: 'check'
+      run: cppcheck ./ --enable=warning,performance,portability --xml-version=2 --error-exitcode=1
+  windows:
+    name: 'for windows'
+    runs-on: windows-latest
+    needs: check
+    steps:
+    - name: 'checkout the project'
+      uses: actions/checkout@v2
+    - name: 'add msbuild'
+      uses: microsoft/setup-msbuild@v1.0.2
+    - name: 'build and make'
+      run: |
+        mkdir build && cd build/
+        mkdir win64 && cd win64/
+        cmake -G "Visual Studio 16 2019" -A "x64" ../../
+        msbuild plan2d.sln /t:Build /p:Configuration="Release" /p:Platform="x64"
+        msbuild plan2d.sln /t:Build /p:Configuration="Debug" /p:Platform="x64"
+        cd ../
+        mkdir win32 && cd win32/
+        cmake -G "Visual Studio 16 2019" -A "Win32" ../../
+        msbuild plan2d.sln /t:Build /p:Configuration="Release" /p:Platform="Win32"
+        msbuild plan2d.sln /t:Build /p:Configuration="Debug" /p:Platform="Win32"
+        cd ../
+        cd ../
+
+  linux:
+    name: 'for linux'
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+    - name: 'checkout the project'
+      uses: actions/checkout@v2
+    - name: 'build and make'
+      run: |
+        mkdir build && cd build/
+        cmake ../
+        make plan2d
+        cd ../
+
+  macos:
+    name: 'for macos'
+    runs-on: macos-latest
+    needs: check
+    steps:
+    - name: 'checkout the project'
+      uses: actions/checkout@v2
+    - name: 'build and make'
+      run: |
+        mkdir build && cd build/
+        cmake ../
+        make plan2d
+        cd ../
