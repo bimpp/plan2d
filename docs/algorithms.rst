@@ -53,5 +53,5 @@ This function computes some edges of all areas that are wrapped by colourful lin
 .. role:: green
 
 * :blue:`Blue lines`: Means the `room_ex` is inside of the lines, and the `side_type` is `bimpp::plan2d::algorithm::room_side_in`.
-* :red:`Red lines`: Means the `room_ex` is outside of the lines, and the `side_type` is `bimpp::plan2d::algorithm::room_side_out`.
-* :green:`Green lines`: Means the `room_ex` is both inside and outside of the lines, and the `side_type` is `bimpp::plan2d::algorithm::room_side_both`.
+* :green:`Green lines`: Means the `room_ex` is outside of the lines, and the `side_type` is `bimpp::plan2d::algorithm::room_side_out`.
+* :red:`Red lines`: Means the `room_ex` is both inside and outside of the lines, and the `side_type` is `bimpp::plan2d::algorithm::room_side_both`.
